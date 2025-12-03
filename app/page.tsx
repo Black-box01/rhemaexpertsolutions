@@ -60,6 +60,20 @@ export default function Home() {
               <li><a href="#about" className="text-blue-900 hover:text-red-600 font-medium">About</a></li>
               <li><a href="#services" className="text-blue-900 hover:text-red-600 font-medium">Services</a></li>
               <li><a href="#contact" className="text-blue-900 hover:text-red-600 font-medium">Contact</a></li>
+              {/* Facebook link in navigation */}
+              <li>
+                <a 
+                  href="https://web.facebook.com/profile.php?id=100092432334656" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-900 hover:text-red-600 font-medium"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current mr-1">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Facebook
+                </a>
+              </li>
             </ul>
           </nav>
           <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
@@ -85,6 +99,20 @@ export default function Home() {
               <button className="border-2 border-blue-700 text-blue-700 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium">
                 Contact Us
               </button>
+            </div>
+            {/* Facebook CTA Button */}
+            <div className="mt-8">
+              <a 
+                href="https://web.facebook.com/profile.php?id=100092432334656" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current mr-2">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Visit Our Facebook Page
+              </a>
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
@@ -279,6 +307,20 @@ export default function Home() {
               <p className="text-blue-200">
                 Empowering innovation through cutting-edge technology solutions across multiple domains.
               </p>
+              {/* Facebook Link in Footer */}
+              <div className="mt-4">
+                <a 
+                  href="https://web.facebook.com/profile.php?id=100092432334656" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-white text-blue-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current mr-2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Follow on Facebook
+                </a>
+              </div>
             </div>
             <div>
               <h4 className="text-lg font-bold mb-4">Quick Links</h4>
