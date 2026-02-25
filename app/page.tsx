@@ -84,9 +84,14 @@ export default async function Home() {
               </li>
             </ul>
           </nav>
-          <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-            Get Started
-          </button>
+          <a 
+            href="https://cbt.rhemaexpertsolutions.com/" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-bold shadow-md animate-pulse"
+          >
+            Rhema CBT Exam
+          </a>
         </div>
       </header>
 
@@ -101,6 +106,14 @@ export default async function Home() {
               Providing cutting-edge solutions in Science, Technology, Engineering, and Mathematics to transform ideas into reality.
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <a 
+                href="https://cbt.rhemaexpertsolutions.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg flex items-center justify-center"
+              >
+                Start CBT Exam
+              </a>
               <button className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium">
                 Explore Services
               </button>
