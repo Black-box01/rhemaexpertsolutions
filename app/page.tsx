@@ -1,9 +1,16 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
+import { getProjectImages } from "@/lib/images";
+import HeroSlideshow from "@/components/HeroSlideshow";
+import ImageGrid from "@/components/ImageGrid";
+import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 
-export default function Home() {
+export default async function Home() {
+  const images = getProjectImages();
+  const heroImages = images.slice(0, 5);
+  const aboutImages = images.slice(5, 8);
+  const galleryImages = images.slice(8, 20); // Limit gallery to 12 images for now to avoid too long page
+
   const services = [
     {
       title: "Science Lab Setup",
@@ -59,6 +66,7 @@ export default function Home() {
               <li><a href="#home" className="text-blue-900 hover:text-red-600 font-medium">Home</a></li>
               <li><a href="#about" className="text-blue-900 hover:text-red-600 font-medium">About</a></li>
               <li><a href="#services" className="text-blue-900 hover:text-red-600 font-medium">Services</a></li>
+              <li><a href="#projects" className="text-blue-900 hover:text-red-600 font-medium">Projects</a></li>
               <li><a href="#contact" className="text-blue-900 hover:text-red-600 font-medium">Contact</a></li>
               {/* Facebook link in navigation */}
               <li>
@@ -116,17 +124,11 @@ export default function Home() {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <div className="relative">
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-blue-200 rounded-full opacity-20 absolute -top-6 -left-6"></div>
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-red-200 rounded-full opacity-20 absolute -bottom-6 -right-6"></div>
-              <div className="relative bg-white p-4 rounded-2xl shadow-xl">
-                <Image
-                  src="/logo.png"
-                  alt="Rhema Expert Solutions"
-                  width={300}
-                  height={300}
-                  className="rounded-lg"
-                />
+            <div className="relative w-full max-w-lg">
+              <div className="w-64 h-64 md:w-80 md:h-80 bg-blue-200 rounded-full opacity-20 absolute -top-6 -left-6 z-0"></div>
+              <div className="w-64 h-64 md:w-80 md:h-80 bg-red-200 rounded-full opacity-20 absolute -bottom-6 -right-6 z-0"></div>
+              <div className="relative z-10 bg-white p-2 rounded-2xl shadow-xl overflow-hidden">
+                <HeroSlideshow images={heroImages} />
               </div>
             </div>
           </div>
@@ -150,9 +152,22 @@ export default function Home() {
               <p className="text-gray-700 mb-4">
                 With expertise spanning Science Lab Setup, Coding & STEM Robotics, AI & IoT, Drone Technology, Digital Electronics, CCTV Systems, Software Development, and Cyber Security, we empower businesses and educational institutions with cutting-edge technology solutions.
               </p>
-              <p className="text-gray-700">
+              <p className="text-gray-700 mb-6">
                 Our mission is to bridge the gap between innovation and implementation, delivering tailored solutions that drive growth and excellence.
               </p>
+              
+              <div className="grid grid-cols-3 gap-2 mt-6">
+                {aboutImages.map((src, i) => (
+                  <div key={i} className="relative h-24 rounded-lg overflow-hidden shadow-sm bg-gray-100">
+                    <ImageWithSkeleton
+                      src={src}
+                      alt="About Us Image"
+                      fill
+                      className="object-cover hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="md:w-1/2 md:pl-10">
               <div className="bg-gray-100 p-8 rounded-2xl">
@@ -206,6 +221,35 @@ export default function Home() {
                 <p className="text-gray-700">{service.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projects" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-blue-900 mb-4">Our Projects</h2>
+            <div className="w-20 h-1 bg-red-600 mx-auto"></div>
+            <p className="text-gray-700 mt-4 max-w-2xl mx-auto">
+              A glimpse into our impactful work in education and technology implementation.
+            </p>
+          </div>
+          
+          <ImageGrid 
+            images={galleryImages} 
+            description="Explore our recent activities, training sessions, and project implementations."
+          />
+          
+          <div className="text-center mt-8">
+            <a 
+              href="https://web.facebook.com/profile.php?id=100092432334656" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-blue-100 text-blue-800 px-6 py-3 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+            >
+              View More on Facebook
+            </a>
           </div>
         </div>
       </section>
@@ -328,6 +372,7 @@ export default function Home() {
                 <li><a href="#home" className="text-blue-200 hover:text-white">Home</a></li>
                 <li><a href="#about" className="text-blue-200 hover:text-white">About Us</a></li>
                 <li><a href="#services" className="text-blue-200 hover:text-white">Services</a></li>
+                <li><a href="#projects" className="text-blue-200 hover:text-white">Projects</a></li>
                 <li><a href="#contact" className="text-blue-200 hover:text-white">Contact</a></li>
               </ul>
             </div>
