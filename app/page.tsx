@@ -97,8 +97,8 @@ export default async function Home() {
 
       {/* Hero Section */}
       <section id="home" className="py-16 md:py-24">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 mb-10 md:mb-0">
+        <div className="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center">
+          <div className="w-full md:w-1/2 mt-10 md:mt-0">
             <h1 className="text-4xl md:text-5xl font-bold text-blue-900 mb-4">
               Empowering Innovation Through Technology
             </h1>
@@ -136,11 +136,11 @@ export default async function Home() {
               </a>
             </div>
           </div>
-          <div className="md:w-1/2 flex justify-center">
+          <div className="w-full md:w-1/2 flex justify-center -mx-4 md:mx-0 width-auto">
             <div className="relative w-full max-w-lg">
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-blue-200 rounded-full opacity-20 absolute -top-6 -left-6 z-0"></div>
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-red-200 rounded-full opacity-20 absolute -bottom-6 -right-6 z-0"></div>
-              <div className="relative z-10 bg-white p-2 rounded-2xl shadow-xl overflow-hidden">
+              <div className="hidden md:block w-64 h-64 md:w-80 md:h-80 bg-blue-200 rounded-full opacity-20 absolute -top-6 -left-6 z-0"></div>
+              <div className="hidden md:block w-64 h-64 md:w-80 md:h-80 bg-red-200 rounded-full opacity-20 absolute -bottom-6 -right-6 z-0"></div>
+              <div className="relative z-10 bg-white p-0 md:p-2 rounded-none md:rounded-2xl shadow-none md:shadow-xl overflow-hidden w-screen md:w-full ml-[calc(-50vw+50%)] md:ml-0 left-[calc(50vw-50%)] md:left-0">
                 <HeroSlideshow images={heroImages} />
               </div>
             </div>
