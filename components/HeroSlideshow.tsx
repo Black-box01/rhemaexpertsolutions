@@ -19,12 +19,20 @@ export default function HeroSlideshow({ images }: HeroSlideshowProps) {
     }, 5000); // Change image every 5 seconds
 
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [images.length, currentImageIndex]); // Reset timer when index changes (auto or manual)
+
+  const nextSlide = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   if (images.length === 0) return null;
 
   return (
-    <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden shadow-xl">
+    <div className="relative w-full h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl group">
       {images.map((src, index) => (
         <div
           key={index}
@@ -47,6 +55,28 @@ export default function HeroSlideshow({ images }: HeroSlideshowProps) {
         </div>
       ))}
       
+      {/* Left Arrow */}
+      <button 
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-100"
+        aria-label="Previous Slide"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+
+      {/* Right Arrow */}
+      <button 
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-100"
+        aria-label="Next Slide"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </button>
+
       {/* Navigation Dots */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-30">
         {images.map((_, index) => (
