@@ -1,50 +1,84 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getProjectImages } from "@/lib/images";
+import { getServiceImages, getRandomImages } from "@/lib/images";
 import HeroSlideshow from "@/components/HeroSlideshow";
-import ImageGrid from "@/components/ImageGrid";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import AutoScrollGallery from "@/components/AutoScrollGallery";
 
 export default async function Home() {
-  const images = getProjectImages();
-  const heroImages = images.slice(0, 5);
-  const aboutImages = images.slice(5, 8);
-  const galleryImages = images.slice(8, 20); // Limit gallery to 12 images for now to avoid too long page
+  // Get images for specific sections
+  const codingImages = getServiceImages('coding');
+  const roboticsImages = getServiceImages('robotics');
+  const allProjectImages = [...codingImages, ...roboticsImages];
+  
+  // Hero: All images from coding and robotics, randomized
+  const heroImages = getRandomImages(allProjectImages, allProjectImages.length);
+  
+  // About: 6 random images from coding and robotics
+  const aboutImages = getRandomImages(allProjectImages, 6);
+  
+  // Projects: All coding and robotics images for the scrolling view
+  // We use the same source as hero but maybe shuffled differently or just raw list
+  const projectGalleryImages = allProjectImages; 
 
-  const services = [
+  const servicesData = [
     {
       title: "Science Lab Setup",
       description: "Complete apparatus and reagents for educational and research institutions",
+      folder: "lab"
     },
     {
       title: "Coding & STEM Robotics",
       description: "Comprehensive training and development in programming and robotics",
+      folder: "coding" // Represents both
     },
     {
       title: "AI & IoT Solutions",
       description: "Cutting-edge artificial intelligence and Internet of Things implementations",
+      folder: "ai&iot"
     },
     {
       title: "Drone Technology",
       description: "Advanced drone systems for various commercial applications",
+      folder: "drone"
     },
     {
       title: "Digital Electronics",
       description: "Circuitry design and embedded systems development",
+      folder: "physics" // Best match for electronics components
     },
     {
       title: "CCTV Systems",
       description: "Installation and maintenance of security surveillance systems",
+      folder: "coding" // Fallback as no cctv folder found
     },
     {
       title: "Software Development",
       description: "Custom websites, mobile apps, and web applications",
+      folder: "software development"
     },
     {
       title: "Cyber Security",
       description: "Ethical hacking and security solutions for digital assets",
+      folder: "cyber security"
     },
+    {
+      title: "Data Analysis: Excel, Power BI",
+      description: "Professional data analysis and visualization services",
+      folder: "data analysis"
+    },
+    {
+      title: "Digital Marketing: Affiliate Marketing",
+      description: "Strategic digital marketing and affiliate program management",
+      folder: "digital marketing"
+    }
   ];
+
+  // Attach images to services
+  const services = servicesData.map(service => ({
+    ...service,
+    images: getServiceImages(service.folder).slice(0, 3) // Get up to 3 images per service
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-red-50">
@@ -181,6 +215,14 @@ export default async function Home() {
                   </div>
                 ))}
               </div>
+              <div className="mt-6">
+                <a 
+                  href="#projects" 
+                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
+                >
+                  View More Projects
+                </a>
+              </div>
             </div>
             <div className="md:w-1/2 md:pl-10">
               <div className="bg-gray-100 p-8 rounded-2xl">
@@ -224,14 +266,30 @@ export default async function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+              <div key={index} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col h-full">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4 shrink-0">
                   <span className="text-blue-700 font-bold">{index + 1}</span>
                 </div>
                 <h3 className="text-xl font-bold text-blue-900 mb-2">{service.title}</h3>
-                <p className="text-gray-700">{service.description}</p>
+                <p className="text-gray-700 mb-4 flex-grow">{service.description}</p>
+                
+                {/* Service Images */}
+                {service.images && service.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mt-auto">
+                    {service.images.slice(0, 3).map((src, imgIndex) => (
+                      <div key={imgIndex} className="relative h-20 rounded-lg overflow-hidden bg-gray-50">
+                        <ImageWithSkeleton
+                          src={src}
+                          alt={`${service.title} image ${imgIndex + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -249,10 +307,7 @@ export default async function Home() {
             </p>
           </div>
           
-          <ImageGrid 
-            images={galleryImages} 
-            description="Explore our recent activities, training sessions, and project implementations."
-          />
+          <AutoScrollGallery images={projectGalleryImages} />
           
           <div className="text-center mt-8">
             <a 
