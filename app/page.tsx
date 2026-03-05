@@ -4,6 +4,7 @@ import { getServiceImages, getRandomImages } from "@/lib/images";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import AutoScrollGallery from "@/components/AutoScrollGallery";
+import ContactButton from "@/components/ContactButton";
 
 export default async function Home() {
   // Get images for specific sections
@@ -344,18 +345,10 @@ export default async function Home() {
             
             <h3 className="text-2xl font-bold text-blue-900 mb-4">Send us an Email</h3>
             <p className="text-gray-600 mb-8 text-lg">
-              Have a project in mind or need more information about our services? Click the button below to send us an email directly.
+              Have a project in mind or need more information about our services? Choose an option below to contact us.
             </p>
             
-            <a 
-              href="mailto:rhemaexpertsolutions@gmail.com?subject=Inquiry from Website" 
-              className="inline-flex items-center justify-center bg-red-600 text-white text-lg font-bold px-8 py-4 rounded-xl hover:bg-red-700 transition-all transform hover:scale-105 shadow-xl"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Contact Us Now
-            </a>
+            <ContactButton />
             
             <div className="mt-8 pt-8 border-t border-blue-100 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-8 text-gray-600">
               <div className="flex items-center justify-center">
