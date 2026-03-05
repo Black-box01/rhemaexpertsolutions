@@ -333,70 +333,38 @@ export default async function Home() {
             </p>
           </div>
           
-          <div className="max-w-4xl mx-auto bg-blue-50 rounded-2xl p-8">
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="name" className="block text-gray-700 mb-2">Full Name</label>
-                <input 
-                  type="text" 
-                  id="name" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your name"
-                />
+          <div className="max-w-2xl mx-auto bg-blue-50 rounded-2xl p-10 text-center shadow-lg">
+            <div className="mb-8 flex justify-center">
+              <div className="bg-white p-4 rounded-full shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
               </div>
-              <div>
-                <label htmlFor="email" className="block text-gray-700 mb-2">Email Address</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
-                />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-blue-900 mb-4">Send us an Email</h3>
+            <p className="text-gray-600 mb-8 text-lg">
+              Have a project in mind or need more information about our services? Click the button below to send us an email directly.
+            </p>
+            
+            <a 
+              href="mailto:rhemaexpertsolutions@gmail.com?subject=Inquiry from Website" 
+              className="inline-flex items-center justify-center bg-red-600 text-white text-lg font-bold px-8 py-4 rounded-xl hover:bg-red-700 transition-all transform hover:scale-105 shadow-xl"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Contact Us Now
+            </a>
+            
+            <div className="mt-8 pt-8 border-t border-blue-100 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-8 text-gray-600">
+              <div className="flex items-center justify-center">
+                <span className="mr-2">📞</span> +234 803 522 6642
               </div>
-              <div>
-                <label htmlFor="phone" className="block text-gray-700 mb-2">Phone Number</label>
-                <input 
-                  type="tel" 
-                  id="phone" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your phone number"
-                />
+              <div className="flex items-center justify-center">
+                <span className="mr-2">📱</span> +234 802 579 1886
               </div>
-              <div>
-                <label htmlFor="service" className="block text-gray-700 mb-2">Service Interested In</label>
-                <select 
-                  id="service" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option>Select a service</option>
-                  <option>Science Lab Setup</option>
-                  <option>Coding & STEM Robotics</option>
-                  <option>AI & IoT Solutions</option>
-                  <option>Drone Technology</option>
-                  <option>Digital Electronics</option>
-                  <option>CCTV Systems</option>
-                  <option>Software Development</option>
-                  <option>Cyber Security</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label htmlFor="message" className="block text-gray-700 mb-2">Message</label>
-                <textarea 
-                  id="message" 
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Tell us about your project"
-                ></textarea>
-              </div>
-              <div className="md:col-span-2">
-                <button 
-                  type="submit"
-                  className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                  Send Message
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       </section>
