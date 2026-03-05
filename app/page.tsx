@@ -51,7 +51,7 @@ export default async function Home() {
     {
       title: "CCTV Systems",
       description: "Installation and maintenance of security surveillance systems",
-      folder: "coding" // Fallback as no cctv folder found
+      folder: "cctv"
     },
     {
       title: "Software Development",
@@ -149,12 +149,12 @@ export default async function Home() {
               >
                 Start CBT Exam
               </a>
-              <button className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium">
+              <a href="#services" className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium flex items-center justify-center">
                 Explore Services
-              </button>
-              <button className="border-2 border-blue-700 text-blue-700 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium">
+              </a>
+              <a href="#contact" className="border-2 border-blue-700 text-blue-700 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center justify-center">
                 Contact Us
-              </button>
+              </a>
             </div>
             {/* Facebook CTA Button */}
             <div className="mt-8">
