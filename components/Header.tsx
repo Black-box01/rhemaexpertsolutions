@@ -27,7 +27,7 @@ export default function Header() {
             height={50}
             className="rounded-lg"
           />
-          <h1 className="text-xl font-bold text-blue-900 hidden sm:block">Rhema Expert Solutions</h1>
+          <h1 className="text-sm font-bold text-blue-900 sm:text-xl">Rhema Expert Solutions</h1>
         </div>
 
         {/* Desktop Navigation */}
