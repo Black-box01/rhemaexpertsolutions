@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent } from '@/types/supabase';
+import { checkAuth, logout } from '@/app/actions/auth';
+import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('services');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,51 +27,44 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState<RhemaContent[]>([]);
 
   useEffect(() => {
-    const isAuth = localStorage.getItem('rhema_admin_auth');
-    if (!isAuth) {
-      router.push('/admin');
-      return;
-    }
-    fetchData();
+    const verifyAuth = async () => {
+      const isAuth = await checkAuth();
+      if (!isAuth) {
+        router.push('/admin');
+        return;
+      }
+      fetchData();
+    };
+    verifyAuth();
   }, [router]);
 
   const fetchData = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      // Fetch Services
-      const { data: servicesData } = await supabase.from('rhema_services').select('*').order('display_order');
-      if (servicesData) setServices(servicesData);
-
-      // Fetch Clients
-      const { data: clientsData } = await supabase.from('rhema_clients').select('*').order('display_order');
-      if (clientsData) setClients(clientsData);
-
-      // Fetch Team
-      const { data: teamData } = await supabase.from('rhema_team').select('*').order('display_order');
-      if (teamData) setTeam(teamData);
+      const result = await fetchDashboardData();
       
-      // Fetch Competitions
-      const { data: compData } = await supabase.from('rhema_competitions').select('*');
-      if (compData) setCompetitions(compData);
-      
-      // Fetch Newsletter
-      const { data: newsData } = await supabase.from('rhema_newsletter').select('*').order('created_at', { ascending: false });
-      if (newsData) setNewsletters(newsData);
-
-      // Fetch Settings (Content)
-      const { data: settingsData } = await supabase.from('rhema_content').select('*').order('section');
-      if (settingsData) setSettings(settingsData);
-
+      if (result.success && result.data) {
+        setServices(result.data.services as RhemaService[]);
+        setClients(result.data.clients as RhemaClient[]);
+        setTeam(result.data.team as RhemaTeam[]);
+        setCompetitions(result.data.competitions as RhemaCompetition[]);
+        setNewsletters(result.data.newsletters as RhemaNewsletter[]);
+        setSettings(result.data.settings as RhemaContent[]);
+      } else {
+        setFetchError(result.error || 'Failed to fetch data');
+        console.error('Error fetching data:', result.error);
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Unexpected error fetching data:', error);
+      setFetchError('Unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('rhema_admin_auth');
-    router.push('/admin');
+  const handleLogout = async () => {
+    await logout();
   };
 
   // Modal Handlers
@@ -94,91 +90,88 @@ export default function AdminDashboard() {
   };
 
   const handleSave = async () => {
+    let result;
+    
     if (activeTab === 'services') {
       const { title, description } = formData;
       if (!title || !description) return alert('Please fill in all fields');
+      result = await saveService({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving service: ' + result.error);
       
-      let error;
-      if (editingItem) {
-        ({ error } = await supabase.from('rhema_services').update({ title, description }).eq('id', editingItem.id));
-      } else {
-        ({ error } = await supabase.from('rhema_services').insert([{ title, description }]));
-      }
-      if (error) alert('Error saving service');
     } else if (activeTab === 'clients') {
       const { name } = formData;
       if (!name) return alert('Please fill in all fields');
+      result = await saveClient({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving client: ' + result.error);
       
-      let error;
-      if (editingItem) {
-        ({ error } = await supabase.from('rhema_clients').update({ name }).eq('id', editingItem.id));
-      } else {
-        ({ error } = await supabase.from('rhema_clients').insert([{ name }]));
-      }
-      if (error) alert('Error saving client');
     } else if (activeTab === 'team') {
       const { name, role } = formData;
       if (!name || !role) return alert('Please fill in all fields');
+      result = await saveTeam({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving team member: ' + result.error);
       
-      let error;
-      if (editingItem) {
-        ({ error } = await supabase.from('rhema_team').update({ name, role }).eq('id', editingItem.id));
-      } else {
-        ({ error } = await supabase.from('rhema_team').insert([{ name, role }]));
-      }
-      if (error) alert('Error saving team member');
     } else if (activeTab === 'competitions') {
       const { title, description, registration_link } = formData;
       if (!title || !description) return alert('Please fill in all fields');
+      result = await saveCompetition({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving competition: ' + result.error);
       
-      let error;
-      if (editingItem) {
-        ({ error } = await supabase.from('rhema_competitions').update({ title, description, registration_link }).eq('id', editingItem.id));
-      } else {
-        ({ error } = await supabase.from('rhema_competitions').insert([{ title, description, registration_link, is_active: true }]));
-      }
-      if (error) alert('Error saving competition');
     } else if (activeTab === 'newsletter') {
       const { title, content } = formData;
       if (!title || !content) return alert('Please fill in all fields');
+      result = await saveNewsletter({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving newsletter: ' + result.error);
       
-      let error;
-      if (editingItem) {
-        ({ error } = await supabase.from('rhema_newsletter').update({ title, content }).eq('id', editingItem.id));
-      } else {
-        ({ error } = await supabase.from('rhema_newsletter').insert([{ title, content, is_published: true }]));
-      }
-      if (error) alert('Error saving newsletter');
     } else if (activeTab === 'settings') {
       const { value } = formData;
-      // We only allow editing the value, not the key or section
       if (!value) return alert('Please enter a value');
-      
-      const { error } = await supabase.from('rhema_content').update({ value }).eq('id', editingItem.id);
-      if (error) alert('Error saving setting');
+      result = await saveSetting({ ...formData, id: editingItem?.id });
+      if (result.error) alert('Error saving setting: ' + result.error);
     }
 
-    closeModal();
-    fetchData();
+    if (result && !result.error) {
+      closeModal();
+      fetchData(); // Refresh data to see changes immediately
+    }
   };
 
   // Generic delete function
   const handleDelete = async (table: string, id: string, refresh: () => void) => {
     if (confirm('Are you sure you want to delete this item?')) {
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      if (error) alert('Error deleting item');
-      else refresh();
+      const result = await deleteItem(table, id);
+      if (result.error) alert('Error deleting item: ' + result.error);
+      else refresh(); // We can also call fetchData() here, but refresh usually does that in this context? 
+      // Actually refresh param is usually fetchData passed down? No, it's used as callback.
+      // Let's explicitly call fetchData() instead of relying on the callback which might be stale
+      fetchData();
     }
   };
 
   // Handlers for Competitions Toggle
   const handleToggleCompetition = async (comp: RhemaCompetition) => {
-    const { error } = await supabase.from('rhema_competitions').update({ is_active: !comp.is_active }).eq('id', comp.id);
-    if (error) alert('Error updating competition');
+    const result = await toggleCompetition(comp.id, !comp.is_active);
+    if (result.error) alert('Error updating competition: ' + result.error);
     else fetchData();
   };
 
   if (loading) return <div className="p-8 text-center text-gray-800">Loading dashboard...</div>;
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-md max-w-md text-center">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading Data</h2>
+          <p className="text-gray-700 mb-6">{fetchError}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 relative">

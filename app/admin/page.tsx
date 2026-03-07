@@ -2,28 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { login } from '@/app/actions/auth';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a simple client-side check for demonstration. 
-    // In a real app, this should be a server action or API route.
-    // For this specific request "default password that i should set from a field in supabase", 
-    // we will implement the check against the Supabase value in the dashboard or via API.
-    // For now, let's just use a hardcoded check that matches the .env example 
-    // or fetch from an API route we'll create.
     
-    // Simplest approach for now:
-    if (password === 'admin123') { // This should ideally be checked against DB
-      // Set a cookie or local storage
-      localStorage.setItem('rhema_admin_auth', 'true');
+    // Server Action for secure authentication
+    const result = await login(password);
+    
+    if (result.success) {
       router.push('/admin/dashboard');
     } else {
-      setError('Invalid password');
+      setError(result.error || 'Invalid password');
     }
   };
 
