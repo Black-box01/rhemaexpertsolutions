@@ -5,8 +5,47 @@ import HeroSlideshow from "@/components/HeroSlideshow";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import AutoScrollGallery from "@/components/AutoScrollGallery";
 import ContactButton from "@/components/ContactButton";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { RhemaCompetition, RhemaNewsletter, RhemaService, RhemaClient, RhemaTeam, RhemaContent } from "@/types/supabase";
 
 export default async function Home() {
+  // Fetch dynamic content from Supabase
+  let dynamicServices: RhemaService[] | null = null;
+  let dynamicClients: RhemaClient[] | null = null;
+  let dynamicTeam: RhemaTeam[] | null = null;
+  let competitions: RhemaCompetition[] | null = null;
+  let newsletters: RhemaNewsletter[] | null = null;
+  let dynamicContent: RhemaContent[] | null = null;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const [servicesRes, clientsRes, teamRes, compRes, newsRes, contentRes] = await Promise.all([
+        supabase.from('rhema_services').select('*').order('display_order'),
+        supabase.from('rhema_clients').select('*').order('display_order'),
+        supabase.from('rhema_team').select('*').order('display_order'),
+        supabase.from('rhema_competitions').select('*').eq('is_active', true),
+        supabase.from('rhema_newsletter').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
+        supabase.from('rhema_content').select('*')
+      ]);
+
+      if (servicesRes.data && servicesRes.data.length > 0) dynamicServices = servicesRes.data;
+      if (clientsRes.data && clientsRes.data.length > 0) dynamicClients = clientsRes.data;
+      if (teamRes.data && teamRes.data.length > 0) dynamicTeam = teamRes.data;
+      if (compRes.data) competitions = compRes.data;
+      if (newsRes.data) newsletters = newsRes.data;
+      if (contentRes.data) dynamicContent = contentRes.data;
+    } catch (error) {
+      console.error('Error fetching dynamic content:', error);
+    }
+  }
+
+  const getContent = (section: string, key: string, fallback: string) => {
+    if (!dynamicContent) return fallback;
+    const item = dynamicContent.find(c => c.section === section && c.key === key);
+    return item ? item.value : fallback;
+  };
+
+  // Fallback to static content if dynamic content is missing
   // Get images for specific sections
   const codingImages = getServiceImages('coding');
   const roboticsImages = getServiceImages('robotics');
@@ -19,19 +58,19 @@ export default async function Home() {
   const aboutImages = getRandomImages(allProjectImages, 6);
   
   // Projects: All coding and robotics images for the scrolling view
-  // We use the same source as hero but maybe shuffled differently or just raw list
   const projectGalleryImages = allProjectImages; 
 
-  const servicesData = [
+  const staticServicesData = [
     {
       title: "Science Lab Setup",
       description: "Complete apparatus and reagents for educational and research institutions",
       folder: "lab"
     },
+    // ... (rest of static services)
     {
       title: "Coding & STEM Robotics",
       description: "Comprehensive training and development in programming and robotics",
-      folder: "coding" // Represents both
+      folder: "coding" 
     },
     {
       title: "AI & IoT Solutions",
@@ -46,7 +85,7 @@ export default async function Home() {
     {
       title: "Digital Electronics",
       description: "Circuitry design and embedded systems development",
-      folder: "physics" // Best match for electronics components
+      folder: "physics" 
     },
     {
       title: "CCTV Systems",
@@ -75,16 +114,71 @@ export default async function Home() {
     }
   ];
 
-  // Attach images to services
-  const services = servicesData.map(service => ({
-    ...service,
-    images: getServiceImages(service.folder).slice(0, 3) // Get up to 3 images per service
-  }));
+  // Process services: Use dynamic if available, else static
+  // Note: For dynamic services, we need to handle image mapping logic.
+  // If dynamic service has 'folder_name', we use local images. If 'image_urls' (remote), we use those.
+  // We'll prioritize local folder mapping for now as requested "local images still stays".
+  
+  const servicesToRender = dynamicServices && dynamicServices.length > 0 
+    ? dynamicServices.map(s => ({
+        ...s,
+        images: [
+          ...(s.image_urls || []), 
+          ...(s.folder_name ? getServiceImages(s.folder_name) : [])
+        ].slice(0, 3)
+      }))
+    : staticServicesData.map(service => ({
+        ...service,
+        images: getServiceImages(service.folder).slice(0, 3)
+      }));
+
+  const clientsToRender = dynamicClients && dynamicClients.length > 0
+    ? dynamicClients.map(c => c.name)
+    : [
+      "DIVISON INTERNATIONAL SCHOOLS, Igbo-Etche, Rivers State",
+      "MESHRIDGE INTERNATIONAL SCHOOL, Trans-Amadi, Rivers State",
+      "GLORIOUS DESTINY ACADEMY, Eliozu, Port Harcourt, Rivers State",
+      "CEREBRAL MODEL COLLEGE, Igwuruta, Rivers State",
+      "BOLDLIVING CHRISTIAN ACADEMY, Trans-Worji, Port Harcourt, Rivers State",
+      "ROHAN EXCELLENT SCHOOLS, Abuloma, Port Harcourt, Rivers State",
+      "ROCKWORD CHRISTIAN SCHOOL, Elelenwo, Port Harcourt, Rivers State",
+      "PROWESS-POINT MODEL SCHOOL, Owerri, Imo State",
+      "STARLIGHT GALAXY INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
+      "GLORIOUS COVENANT SCHOOL, Rumuodara, Port Harcourt, Rivers State",
+      "MORAL SEED MONTESSORI SCHOOL, Elelenwo, Port Harcourt, Rivers State",
+      "DE EXCELLENT CHILD INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
+      "LIFE STANDARD EDUCATIONAL CENTER, Rumukwurushi, Port Harcourt, Rivers State",
+      "TREASURE INTERNATIONAL SCHOOL, Rumukwurushi, Port Harcourt, Rivers State",
+      "DIVINE FAVOUR INTERNATIONAL SCHOOL, Akpajo, Eleme, Rivers State",
+      "JECK COMPREHENSIVE COLLEGE, Elimgbu, Port Harcourt, Rivers State",
+      "GREATNESS MONTESSORI ACADEMY, Rumuokwurishi, Port Harcourt, Rivers State",
+      "TRILLIUM SUCCESS ACADEMY, Eliozu, Port Harcourt, Rivers State",
+      "JESHURUN MONTESSORI INTERNATIONAL SCHOOL, Atali, Port Harcourt, Rivers State",
+      "CHIBSON INTERNATIONAL SCHOOL, Rumunduru, Port Harcourt, Rivers State",
+      "JESHURUN HIGH SCHOOL, Atali, Port Harcourt, Rivers State",
+      "EAGLE GREAT STARS INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
+      "3 STARS EDUCATIONAL CENTER, Borikiri, Port Harcourt, Rivers State"
+    ];
+
+  const teamToRender = dynamicTeam && dynamicTeam.length > 0
+    ? dynamicTeam
+    : [
+        {
+          name: "FRED C. ODII",
+          role: "Head of Operations (HOO)",
+          image_url: "/img/staff/fred.jpeg"
+        },
+        {
+          name: "NWACHUKWU ONYEKACHI",
+          role: "Chief Technology Officer (CTO)",
+          image_url: "/img/staff/onyekachi.jpeg"
+        }
+      ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-red-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <ImageWithSkeleton
@@ -94,22 +188,22 @@ export default async function Home() {
               height={50}
               className="rounded-lg"
             />
-            <h1 className="text-xl font-bold text-blue-900">Rhema Expert Solutions</h1>
+            <h1 className="text-xl font-bold text-blue-900 hidden sm:block">Rhema Expert Solutions</h1>
           </div>
           <nav className="hidden md:block">
-            <ul className="flex space-x-8">
-              <li><a href="#home" className="text-blue-900 hover:text-red-600 font-medium">Home</a></li>
-              <li><a href="#about" className="text-blue-900 hover:text-red-600 font-medium">About</a></li>
-              <li><a href="#services" className="text-blue-900 hover:text-red-600 font-medium">Services</a></li>
-              <li><a href="#projects" className="text-blue-900 hover:text-red-600 font-medium">Projects</a></li>
-              <li><a href="#contact" className="text-blue-900 hover:text-red-600 font-medium">Contact</a></li>
-              {/* Facebook link in navigation */}
+            <ul className="flex space-x-6 text-sm font-medium">
+              <li><a href="#home" className="text-blue-900 hover:text-red-600 transition-colors">Home</a></li>
+              <li><a href="#about" className="text-blue-900 hover:text-red-600 transition-colors">About</a></li>
+              <li><a href="#services" className="text-blue-900 hover:text-red-600 transition-colors">Services</a></li>
+              <li><a href="#projects" className="text-blue-900 hover:text-red-600 transition-colors">Projects</a></li>
+              <li><a href="#competitions" className="text-red-600 hover:text-blue-900 transition-colors animate-pulse">Competitions</a></li>
+              <li><a href="#contact" className="text-blue-900 hover:text-red-600 transition-colors">Contact</a></li>
               <li>
                 <a 
                   href="https://web.facebook.com/profile.php?id=100092432334656" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center text-blue-900 hover:text-red-600 font-medium"
+                  className="flex items-center text-blue-900 hover:text-red-600 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current mr-1">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -119,64 +213,122 @@ export default async function Home() {
               </li>
             </ul>
           </nav>
-          <a 
-            href="https://cbt.rhemaexpertsolutions.com/" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-bold shadow-md animate-pulse"
-          >
-            Rhema CBT Exam
-          </a>
+          <div className="flex space-x-2">
+             <a 
+              href="https://cbt.rhemaexpertsolutions.com/" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors font-bold shadow-md text-sm"
+            >
+              CBT Exam
+            </a>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="py-16 md:py-24">
+      <section id="home" className="py-12 md:py-20">
         <div className="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center">
-          <div className="w-full md:w-1/2 mt-10 md:mt-0">
-            <h1 className="text-4xl md:text-5xl font-bold text-blue-900 mb-4">
-              Empowering Innovation Through Technology
+          <div className="w-full md:w-1/2 mt-8 md:mt-0">
+            <h1 className="text-xl md:text-4xl lg:text-5xl font-extrabold text-blue-900 mb-6 leading-tight">
+              {getContent('hero', 'title', 'Empowering Innovation Through Technology')}
             </h1>
-            <p className="text-lg text-gray-700 mb-8">
-              Providing cutting-edge solutions in Science, Technology, Engineering, and Mathematics to transform ideas into reality.
+            <p className="text-lg text-gray-700 mb-8 max-w-lg">
+              {getContent('hero', 'subtitle', 'Providing cutting-edge solutions in Science, Technology, Engineering, and Mathematics to transform ideas into reality.')}
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <a 
                 href="https://cbt.rhemaexpertsolutions.com/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg flex items-center justify-center"
+                className="bg-red-600 text-white px-8 py-3 rounded-full hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 hover:-translate-y-1 font-bold text-center"
               >
                 Start CBT Exam
               </a>
-              <a href="#services" className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-medium flex items-center justify-center">
+              <a href="#services" className="bg-white text-blue-900 border-2 border-blue-900 px-8 py-3 rounded-full hover:bg-blue-50 transition-all font-bold text-center">
                 Explore Services
               </a>
-              <a href="#contact" className="border-2 border-blue-700 text-blue-700 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center justify-center">
-                Contact Us
-              </a>
             </div>
-            {/* Facebook CTA Button */}
-            <div className="mt-8">
-              <a 
-                href="https://web.facebook.com/profile.php?id=100092432334656" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current mr-2">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                Visit Our Facebook Page
-              </a>
-            </div>
+            
+            {/* Newsletter Snippet / Updates */}
+            {newsletters && newsletters.length > 0 && (
+              <div className="mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-blue-100 shadow-sm">
+                <div className="flex items-center mb-2">
+                  <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full mr-2">LATEST NEWS</span>
+                  <span className="text-gray-500 text-xs">{new Date(newsletters[0].created_at || '').toLocaleDateString()}</span>
+                </div>
+                <h4 className="font-bold text-blue-900 text-sm">{newsletters[0].title}</h4>
+                <p className="text-gray-600 text-xs mt-1 line-clamp-2">{newsletters[0].content}</p>
+              </div>
+            )}
           </div>
+          
           <div className="w-full md:w-1/2 flex justify-center -mx-4 md:mx-0 width-auto">
             <div className="relative w-full max-w-lg">
-              <div className="hidden md:block w-64 h-64 md:w-80 md:h-80 bg-blue-200 rounded-full opacity-20 absolute -top-6 -left-6 z-0"></div>
-              <div className="hidden md:block w-64 h-64 md:w-80 md:h-80 bg-red-200 rounded-full opacity-20 absolute -bottom-6 -right-6 z-0"></div>
-              <div className="relative z-10 bg-white p-0 md:p-2 rounded-none md:rounded-2xl shadow-none md:shadow-xl overflow-hidden w-screen md:w-full ml-[calc(-50vw+50%)] md:ml-0 left-[calc(50vw-50%)] md:left-0">
+              <div className="hidden md:block w-72 h-72 bg-blue-200 rounded-full opacity-20 absolute -top-10 -left-10 z-0 blur-3xl"></div>
+              <div className="hidden md:block w-72 h-72 bg-red-200 rounded-full opacity-20 absolute -bottom-10 -right-10 z-0 blur-3xl"></div>
+              <div className="relative z-10 bg-white p-0 md:p-2 rounded-none md:rounded-3xl shadow-none md:shadow-2xl overflow-hidden w-screen md:w-full ml-[calc(-50vw+50%)] md:ml-0 left-[calc(50vw-50%)] md:left-0">
                 <HeroSlideshow images={heroImages} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* R.E.S Coding Competition Section */}
+      <section id="competitions" className="py-16 bg-gradient-to-r from-blue-900 to-blue-800 text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('/img/pattern.png')] bg-repeat"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-2/3 mb-8 md:mb-0">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-600 p-3 rounded-lg mr-4 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold">R.E.S National Coding Competition</h2>
+              </div>
+              <p className="text-blue-100 text-lg mb-6 max-w-2xl">
+                Join the annual coding challenge for schools across Nigeria. Showcase your skills, compete with the best, and win prestigious awards.
+              </p>
+              
+              {competitions && competitions.length > 0 ? (
+                <div className="space-y-4">
+                  {competitions.map((comp) => (
+                    <div key={comp.id} className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                      <h3 className="text-xl font-bold mb-2 text-yellow-300">{comp.title}</h3>
+                      <p className="mb-4 text-gray-200">{comp.description}</p>
+                      {comp.registration_link && (
+                        <a 
+                          href={comp.registration_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-full transition-all shadow-md"
+                        >
+                          Register Now
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                  <p className="text-xl font-bold text-yellow-300">Registration Opening Soon!</p>
+                  <p className="text-gray-200">Stay tuned for updates on the next coding competition schedule.</p>
+                </div>
+              )}
+            </div>
+            <div className="md:w-1/3 flex justify-center">
+              <div className="w-64 h-64 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20 shadow-2xl relative">
+                <div className="absolute inset-0 animate-spin-slow">
+                  <svg viewBox="0 0 100 100" className="w-full h-full fill-current text-white/5">
+                    <path d="M50 0 L100 50 L50 100 L0 50 Z" />
+                  </svg>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-32 w-32 text-yellow-400 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
               </div>
             </div>
           </div>
@@ -193,9 +345,9 @@ export default async function Home() {
           
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-10 md:mb-0">
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Transforming Ideas Into Reality</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">{getContent('about', 'title', 'Transforming Ideas Into Reality')}</h3>
               <p className="text-gray-700 mb-4">
-                Rhema Expert Solutions is a premier technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains.
+                {getContent('about', 'intro', 'Rhema Expert Solutions is a premier technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains.')}
               </p>
               <p className="text-gray-700 mb-4">
                 With expertise spanning Science Lab Setup, Coding & STEM Robotics, AI & IoT, Drone Technology, Digital Electronics, CCTV Systems, Software Development, and Cyber Security, we empower businesses and educational institutions with cutting-edge technology solutions.
@@ -239,15 +391,15 @@ export default async function Home() {
                   </li>
                   <li className="flex items-center">
                     <span className="text-red-600 mr-2">📞</span>
-                    <span className="text-gray-700">+234 803 522 6642</span>
+                    <span className="text-gray-700">{getContent('contact', 'phone1', '+234 803 522 6642')}</span>
                   </li>
                   <li className="flex items-center">
                     <span className="text-red-600 mr-2">📱</span>
-                    <span className="text-gray-700">+234 802 579 1886 (WhatsApp)</span>
+                    <span className="text-gray-700">{getContent('contact', 'phone2', '+234 802 579 1886 (WhatsApp)')}</span>
                   </li>
                   <li className="flex items-center">
                     <span className="text-red-600 mr-2">✉️</span>
-                    <span className="text-gray-700">rhemaexpertsolutions@gmail.com</span>
+                    <span className="text-gray-700">{getContent('contact', 'email', 'rhemaexpertsolutions@gmail.com')}</span>
                   </li>
                 </ul>
               </div>
@@ -271,7 +423,7 @@ export default async function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
+            {servicesToRender.map((service, index) => (
               <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center mb-4 shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-inner">
                   <span className="text-blue-700 font-bold">{index + 1}</span>
@@ -341,31 +493,7 @@ export default async function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              "DIVISON INTERNATIONAL SCHOOLS, Igbo-Etche, Rivers State",
-              "MESHRIDGE INTERNATIONAL SCHOOL, Trans-Amadi, Rivers State",
-              "GLORIOUS DESTINY ACADEMY, Eliozu, Port Harcourt, Rivers State",
-              "CEREBRAL MODEL COLLEGE, Igwuruta, Rivers State",
-              "BOLDLIVING CHRISTIAN ACADEMY, Trans-Worji, Port Harcourt, Rivers State",
-              "ROHAN EXCELLENT SCHOOLS, Abuloma, Port Harcourt, Rivers State",
-              "ROCKWORD CHRISTIAN SCHOOL, Elelenwo, Port Harcourt, Rivers State",
-              "PROWESS-POINT MODEL SCHOOL, Owerri, Imo State",
-              "STARLIGHT GALAXY INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
-              "GLORIOUS COVENANT SCHOOL, Rumuodara, Port Harcourt, Rivers State",
-              "MORAL SEED MONTESSORI SCHOOL, Elelenwo, Port Harcourt, Rivers State",
-              "DE EXCELLENT CHILD INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
-              "LIFE STANDARD EDUCATIONAL CENTER, Rumukwurushi, Port Harcourt, Rivers State",
-              "TREASURE INTERNATIONAL SCHOOL, Rumukwurushi, Port Harcourt, Rivers State",
-              "DIVINE FAVOUR INTERNATIONAL SCHOOL, Akpajo, Eleme, Rivers State",
-              "JECK COMPREHENSIVE COLLEGE, Elimgbu, Port Harcourt, Rivers State",
-              "GREATNESS MONTESSORI ACADEMY, Rumuokwurishi, Port Harcourt, Rivers State",
-              "TRILLIUM SUCCESS ACADEMY, Eliozu, Port Harcourt, Rivers State",
-              "JESHURUN MONTESSORI INTERNATIONAL SCHOOL, Atali, Port Harcourt, Rivers State",
-              "CHIBSON INTERNATIONAL SCHOOL, Rumunduru, Port Harcourt, Rivers State",
-              "JESHURUN HIGH SCHOOL, Atali, Port Harcourt, Rivers State",
-              "EAGLE GREAT STARS INTERNATIONAL SCHOOL, Elelenwo, Port Harcourt, Rivers State",
-              "3 STARS EDUCATIONAL CENTER, Borikiri, Port Harcourt, Rivers State"
-            ].map((client, index) => (
+            {clientsToRender.map((client, index) => (
               <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex items-start">
                 <div className="bg-blue-100 p-2 rounded-full mr-4 flex-shrink-0">
                   <span className="text-blue-600 font-bold text-sm w-6 h-6 flex items-center justify-center">{index + 1}</span>
@@ -389,22 +517,11 @@ export default async function Home() {
           </div>
           
           <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-            {[
-              {
-                name: "FRED C. ODII",
-                role: "Head of Operations (HOO)",
-                image: "/img/staff/fred.jpeg"
-              },
-              {
-                name: "NWACHUKWU ONYEKACHI",
-                role: "Chief Technology Officer (CTO)",
-                image: "/img/staff/onyekachi.jpeg"
-              }
-            ].map((staff, index) => (
+            {teamToRender.map((staff, index) => (
               <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 w-full max-w-sm flex flex-col items-center group text-center">
                 <div className="relative w-48 h-48 rounded-full overflow-hidden mb-6 border-4 border-blue-50 shadow-inner group-hover:border-red-50 transition-colors duration-300">
                   <ImageWithSkeleton
-                    src={staff.image}
+                    src={staff.image_url || '/img/placeholder-staff.png'}
                     alt={staff.name}
                     fill
                     className="object-cover transform group-hover:scale-110 transition-transform duration-700"
@@ -459,10 +576,10 @@ export default async function Home() {
             
             <div className="mt-8 pt-8 border-t border-blue-100 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-8 text-gray-600">
               <div className="flex items-center justify-center">
-                <span className="mr-2">📞</span> +234 803 522 6642
+                <span className="mr-2">📞</span> {getContent('contact', 'phone1', '+234 803 522 6642')}
               </div>
               <div className="flex items-center justify-center">
-                <span className="mr-2">📱</span> +234 802 579 1886
+                <span className="mr-2">📱</span> {getContent('contact', 'phone2', '+234 802 579 1886')}
               </div>
             </div>
           </div>
@@ -525,9 +642,9 @@ export default async function Home() {
               <h4 className="text-lg font-bold mb-4">Contact Info</h4>
               <ul className="space-y-2 text-blue-200">
                 <li>📍 Port Harcourt & Lagos, Nigeria</li>
-                <li>📞 +234 803 522 6642</li>
-                <li>📱 +234 802 579 1886</li>
-                <li>✉️ rhemaexpertsolutions@gmail.com</li>
+                <li>📞 {getContent('contact', 'phone1', '+234 803 522 6642')}</li>
+                <li>📱 {getContent('contact', 'phone2', '+234 802 579 1886')}</li>
+                <li>✉️ {getContent('contact', 'email', 'rhemaexpertsolutions@gmail.com')}</li>
               </ul>
             </div>
           </div>
