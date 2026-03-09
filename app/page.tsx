@@ -258,55 +258,42 @@ export default async function Home() {
                   </div>
                 </div>
                 <div>
-                   <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm">FutureTech CodeFest</h2>
-                   <p className="text-yellow-300 font-bold italic tracking-wider mt-2 text-lg">"I Can Code"</p>
+                   <h2 className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm">SMART CODERS</h2>
+                   <p className="text-xl md:text-2xl font-bold text-white mt-1">NATIONAL COMPETITION</p>
+                   <p className="text-yellow-300 font-bold italic tracking-wider mt-2 text-lg">"I CAN CODE"</p>
                 </div>
               </div>
               <p className="text-blue-50 text-lg mb-8 max-w-2xl leading-relaxed font-light">
                 Join the annual coding challenge for schools across Nigeria. Showcase your skills, compete with the best, and win prestigious awards.
               </p>
               
-              {competitions && competitions.length > 0 ? (
-                <div className="space-y-6">
-                  {competitions.map((comp) => (
-                    <div key={comp.id} className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl p-8 rounded-3xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] transition-all hover:-translate-y-1">
-                      <h3 className="text-2xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400">{comp.title}</h3>
-                      <p className="mb-6 text-blue-50 leading-relaxed">{comp.description}</p>
-                      
-                      <div className="flex items-center space-x-4 mb-6">
-                         <div className="flex items-center text-sm font-medium text-blue-100 bg-white/10 px-4 py-2 rounded-full border border-white/10">
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.699-3.181a1 1 0 011.827 1.035L17.474 8l2.027 1.682a1 1 0 01-1.326 1.483L16.03 9.414l-1.586 2.969 2.598 1.038a1 1 0 01-.6 1.868l-6.43 1.286a1 1 0 01-1.012-.863L8 12.323v-1.323l-3.954-1.582-1.699 3.181a1 1 0 01-1.827-1.035L1.526 8 .499 6.318a1 1 0 011.326-1.483L3.97 7.586l1.586-2.969-2.598-1.038a1 1 0 01.6-1.868l6.43-1.286A1 1 0 0111 1.323V2z" clipRule="evenodd" />
-                           </svg>
-                           <span>Scholarships & Gadgets to be Won!</span>
-                         </div>
-                      </div>
+              <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl p-8 rounded-3xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)]">
+                  <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400 mb-2">Registration is FREE!</p>
+                  <p className="text-blue-50 mb-6">Open for scholars in Nigerian Primary and Secondary Schools.</p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <a 
+                      href="/competition"
+                      className="inline-block bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold px-8 py-3 rounded-full transition-all shadow-lg hover:shadow-red-500/30 border border-white/10 text-center"
+                    >
+                      Register Now
+                    </a>
+                    <a 
+                      href="/competition"
+                      className="inline-block bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-3 rounded-full transition-all border border-white/30 text-center backdrop-blur-md"
+                    >
+                      View Details
+                    </a>
+                  </div>
 
-                      {comp.registration_link && (
-                        <a 
-                          href={comp.registration_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold px-8 py-3 rounded-full transition-all shadow-lg hover:shadow-red-500/30 border border-white/10"
-                        >
-                          Register Now
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl p-8 rounded-3xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)]">
-                  <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400 mb-2">Registration Opening Soon!</p>
-                  <p className="text-blue-50">Stay tuned for updates on the next coding competition schedule.</p>
                    <div className="mt-6 flex items-center text-sm text-blue-100 bg-white/5 p-3 rounded-xl border border-white/5 w-fit">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="font-medium">Prepare for the "I Can Code" Challenge</span>
                    </div>
-                </div>
-              )}
+              </div>
+
             </div>
             <div className="md:w-1/3 flex justify-center mt-12 md:mt-0 relative">
               {/* Decorative Glow for Award */}
@@ -341,15 +328,15 @@ export default async function Home() {
           
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-10 md:mb-0">
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">{getContent('about', 'title', 'Transforming Ideas Into Reality')}</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">COMPANY PROFILE</h3>
               <p className="text-gray-700 mb-4">
-                {getContent('about', 'intro', 'Rhema Expert Solutions is a premier technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains.')}
+                <strong>RHEMA EXPERT SOLUTIONS</strong> is an integrated company, dedicated to providing Hi-Tech Trainings & Solutions in Educational Sector, Programming and Software Development. The firm has expanded in her services by the introduction of: CYBER SECURITY, majoring on; Ethical Hacking, Digital Forensics, Penetration Testing and Vulnerability Assessment. It commenced operation in the year, 2022 at the Corporate Headquarters in Surulere, Lagos – Nigeria.
               </p>
               <p className="text-gray-700 mb-4">
-                With expertise spanning Science Lab Setup, Coding & STEM Robotics, AI & IoT, Drone Technology, Digital Electronics, CCTV Systems, Software Development, and Cyber Security, we empower businesses and educational institutions with cutting-edge technology solutions.
+                The firm blaze the impact of Technology in all sphere of learning and equally engages in other services such as Installation and Maintenance of CCTV Systems, Website Designs & Development: Web App and Mobile App, Drone Technology & Database Management, STEM Robotics and Coding (Programming), STEM AVIATION, DIGITAL MARKETING, DATA ANALYSIS: Excel, Power BI.
               </p>
               <p className="text-gray-700 mb-6">
-                Our mission is to bridge the gap between innovation and implementation, delivering tailored solutions that drive growth and excellence.
+                <strong>RHEMA EXPERT SOLUTIONS</strong> is working endlessly to become a major player in the Tech-World in terms of product efficiency, distribution and services. By leveraging a well thought out business plans executed by a skilled Management Team, RHEMA EXPERT SOLUTIONS will achieve its goals and vision in a short while. The firm source for products from affiliate companies in Europe, Asia and India.
               </p>
               
               <div className="grid grid-cols-3 gap-2 mt-6">

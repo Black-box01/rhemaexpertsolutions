@@ -53,6 +53,24 @@ export interface RhemaNewsletter {
   created_at?: string;
 }
 
+export interface RhemaRegistration {
+  id: string;
+  created_at: string;
+  full_name: string;
+  gender: string;
+  date_of_birth: string;
+  age: number;
+  school_name: string;
+  school_address?: string;
+  class_level: string;
+  category: string;
+  parent_name: string;
+  parent_phone: string;
+  parent_email?: string;
+  competition_name: string;
+  status: string;
+}
+
 export interface RhemaProject {
   id: string;
   title?: string;

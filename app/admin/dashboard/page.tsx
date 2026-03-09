@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
+import { fetchRegistrations } from '@/app/actions/registration';
+import { RhemaRegistration } from '@/types/supabase';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export default function AdminDashboard() {
   const [competitions, setCompetitions] = useState<RhemaCompetition[]>([]);
   const [newsletters, setNewsletters] = useState<RhemaNewsletter[]>([]);
   const [settings, setSettings] = useState<RhemaContent[]>([]);
+  const [registrations, setRegistrations] = useState<RhemaRegistration[]>([]);
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -55,6 +58,13 @@ export default function AdminDashboard() {
         setFetchError(result.error || 'Failed to fetch data');
         console.error('Error fetching data:', result.error);
       }
+
+      // Fetch registrations
+      const regResult = await fetchRegistrations();
+      if (regResult.success) {
+        setRegistrations(regResult.data as RhemaRegistration[]);
+      }
+
     } catch (error) {
       console.error('Unexpected error fetching data:', error);
       setFetchError('Unexpected error occurred');
@@ -374,6 +384,7 @@ export default function AdminDashboard() {
               { id: 'team', label: 'Team' },
               { id: 'competitions', label: 'Competitions' },
               { id: 'newsletter', label: 'Newsletter' },
+              { id: 'registrations', label: 'Registrations' },
               { id: 'settings', label: 'General Settings' },
             ].map((tab) => (
               <li key={tab.id}>
@@ -531,6 +542,60 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'registrations' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Competition Registrations</h3>
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">{registrations.length} Total</span>
+              </div>
+              
+              <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">School</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Parent Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {registrations.map((reg) => (
+                      <tr key={reg.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(reg.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{reg.full_name}</div>
+                          <div className="text-sm text-gray-500">{reg.gender}, {reg.age}yrs</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {reg.category}
+                          <div className="text-xs text-gray-500">{reg.class_level}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {reg.school_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{reg.parent_name}</div>
+                          <div className="text-sm text-gray-500">{reg.parent_phone}</div>
+                        </td>
+                      </tr>
+                    ))}
+                    {registrations.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic">
+                          No registrations found yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
