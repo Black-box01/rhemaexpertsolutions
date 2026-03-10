@@ -62,6 +62,7 @@ export interface RhemaRegistration {
   age: number;
   school_name: string;
   school_address?: string;
+  school_phone?: string;
   class_level: string;
   category: string;
   parent_name: string;

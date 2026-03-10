@@ -14,6 +14,7 @@ export default function CompetitionPage() {
     age: '',
     school_name: '',
     school_address: '',
+    school_phone: '',
     class_level: '',
     category: 'LOWER PRIMARY',
     parent_name: '',
@@ -44,6 +45,7 @@ export default function CompetitionPage() {
           age: '',
           school_name: '',
           school_address: '',
+          school_phone: '',
           class_level: '',
           category: 'LOWER PRIMARY',
           parent_name: '',
@@ -251,6 +253,11 @@ export default function CompetitionPage() {
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase mb-1">School Address</label>
                   <input name="school_address" value={formData.school_address} onChange={handleChange} type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="City, State" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">School Phone Number</label>
+                  <input name="school_phone" value={formData.school_phone} onChange={handleChange} type="tel" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Official School Contact" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

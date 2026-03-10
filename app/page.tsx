@@ -29,7 +29,8 @@ export default async function Home() {
         supabase.from('rhema_content').select('*')
       ]);
 
-      if (servicesRes.data && servicesRes.data.length > 0) dynamicServices = servicesRes.data;
+      // Assign fetched data directly, even if empty array, to prevent fallback to static data
+      dynamicServices = servicesRes.data;
       if (clientsRes.data && clientsRes.data.length > 0) dynamicClients = clientsRes.data;
       if (teamRes.data && teamRes.data.length > 0) dynamicTeam = teamRes.data;
       if (compRes.data) competitions = compRes.data;
@@ -115,10 +116,11 @@ export default async function Home() {
     }
   ];
 
-  // Process services: Use dynamic if available, else static
-  // Note: For dynamic services, we need to handle image mapping logic.
-  // If dynamic service has 'folder_name', we use local images. If 'image_urls' (remote), we use those.
-  // We'll prioritize local folder mapping for now as requested "local images still stays".
+  // Process services: ONLY use dynamic services if available and fallback to empty array (or static ONLY if database is empty/failed)
+  // The user stated they deleted items from DB but they still show. 
+  // This means `dynamicServices` is likely null or empty, causing the fallback `staticServicesData` to render.
+  // We should prefer showing NOTHING if the DB call succeeded but returned 0 items, rather than showing stale static data.
+  // However, `dynamicServices` is initialized as null.
   
   const servicesToRender = dynamicServices && dynamicServices.length > 0 
     ? dynamicServices.map(s => ({
@@ -128,10 +130,13 @@ export default async function Home() {
           ...(s.folder_name ? getServiceImages(s.folder_name) : [])
         ].slice(0, 3)
       }))
-    : staticServicesData.map(service => ({
+    : dynamicServices !== null // If DB fetch succeeded but empty, show nothing. Only show static if DB fetch failed/not run (null)
+      ? []
+      : staticServicesData.map(service => ({
         ...service,
         images: getServiceImages(service.folder).slice(0, 3)
       }));
+
 
   const clientsToRender = dynamicClients && dynamicClients.length > 0
     ? dynamicClients.map(c => c.name)
@@ -301,6 +306,17 @@ export default async function Home() {
               
               <div className="w-72 h-72 rounded-full flex items-center justify-center relative bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] ring-1 ring-white/20 z-10 group hover:scale-105 transition-transform duration-500">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50 pointer-events-none"></div>
+                
+                {/* Floating Coding Image Badge */}
+                <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-4 border-white/20 shadow-xl overflow-hidden z-20 animate-bounce-slow">
+                  <Image
+                    src="/img/coding.jpg"
+                    alt="Coding Badge"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
                 <div className="flex flex-col items-center">
                    <div className="relative w-52 h-52 transform group-hover:scale-110 transition-transform duration-500">
                      <Image
@@ -326,17 +342,26 @@ export default async function Home() {
             <div className="w-20 h-1 bg-red-600 mx-auto"></div>
           </div>
           
-          <div className="flex flex-col md:flex-row items-center">
+          <div className="flex flex-col md:flex-row items-start">
             <div className="md:w-1/2 mb-10 md:mb-0">
               <h3 className="text-2xl font-bold text-blue-900 mb-4">COMPANY PROFILE</h3>
-              <p className="text-gray-700 mb-4">
-                <strong>RHEMA EXPERT SOLUTIONS</strong> is an integrated company, dedicated to providing Hi-Tech Trainings & Solutions in Educational Sector, Programming and Software Development. The firm has expanded in her services by the introduction of: CYBER SECURITY, majoring on; Ethical Hacking, Digital Forensics, Penetration Testing and Vulnerability Assessment. It commenced operation in the year, 2022 at the Corporate Headquarters in Surulere, Lagos – Nigeria.
+              <p className="text-gray-700 mb-4 text-justify">
+                <strong>RHEMA EXPERT SOLUTIONS</strong> is a premier Technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains. 
               </p>
-              <p className="text-gray-700 mb-4">
-                The firm blaze the impact of Technology in all sphere of learning and equally engages in other services such as Installation and Maintenance of CCTV Systems, Website Designs & Development: Web App and Mobile App, Drone Technology & Database Management, STEM Robotics and Coding (Programming), STEM AVIATION, DIGITAL MARKETING, DATA ANALYSIS: Excel, Power BI.
+              <p className="text-gray-700 mb-4 text-justify">
+                With expertise spanning; Science Laboratory Setup, Coding (Programming) & STEM Robotics, AI, IoT, Drone Technology, CCTV System, Software Development and Cyber Security. We empower businesses and educational institutions with cutting-edge technology solutions.
               </p>
-              <p className="text-gray-700 mb-6">
-                <strong>RHEMA EXPERT SOLUTIONS</strong> is working endlessly to become a major player in the Tech-World in terms of product efficiency, distribution and services. By leveraging a well thought out business plans executed by a skilled Management Team, RHEMA EXPERT SOLUTIONS will achieve its goals and vision in a short while. The firm source for products from affiliate companies in Europe, Asia and India.
+              <p className="text-gray-700 mb-4 text-justify">
+                The firm blaze the impact of Technology in all sphere of learning and equally engages in other services such as Installation and Maintenance of CCTV Systems, Website Designs & Development: Web App and Mobile App, Drone Technology & Database Management, CYBER SECURITY, majoring on; Ethical Hacking, Digital Forensics, Penetration Testing and Vulnerability Assessment, STEM AVIATION, DIGITAL MARKETING, DATA ANALYSIS: Excel, Power BI.
+              </p>
+              <p className="text-gray-700 mb-4 text-justify">
+                Our mission is to bridge the gap between innovation and implementation delivering tailored to meet the {getContent('about', 'title', 'Transforming Ideas Into Reality')}. {getContent('about', 'intro', 'Rhema Expert Solutions is a premier technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains.')}
+              </p>
+              <p className="text-gray-700 mb-4 text-justify">
+                <strong>RHEMA EXPERT SOLUTIONS</strong> is working endlessly to become a major player in the Tech-World in terms of product efficiency, distribution and services. By leveraging a well thought out business plans executed by a skilled Management Team, RHEMA EXPERT SOLUTIONS will achieve its goals and vision in a short while.
+              </p>
+              <p className="text-gray-700 mb-6 text-justify">
+                The firm source for products from affiliate companies in Europe, Asia and India.
               </p>
               
               <div className="grid grid-cols-3 gap-2 mt-6">
