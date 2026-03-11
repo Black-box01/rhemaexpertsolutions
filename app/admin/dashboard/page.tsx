@@ -2,23 +2,37 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent } from '@/types/supabase';
+import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
 import { fetchRegistrations } from '@/app/actions/registration';
-import { RhemaRegistration } from '@/types/supabase';
+
+type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations';
+
+type FormState = {
+  [key: string]: unknown;
+  id?: string;
+  title?: string;
+  description?: string;
+  name?: string;
+  role?: string;
+  registration_link?: string;
+  content?: string;
+  value?: string;
+  section?: string;
+  key?: string;
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('services');
+  const [activeTab, setActiveTab] = useState<AdminTab>('services');
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null); // Using any for simplicity in this multi-type form
-  const [formData, setFormData] = useState<any>({});
+  const [editingItem, setEditingItem] = useState<FormState | null>(null);
+  const [formData, setFormData] = useState<FormState>({});
 
   // Data states
   const [services, setServices] = useState<RhemaService[]>([]);
@@ -78,13 +92,10 @@ export default function AdminDashboard() {
   };
 
   // Modal Handlers
-  const openModal = (item: any = null) => {
-    setEditingItem(item);
-    if (item) {
-      setFormData({ ...item });
-    } else {
-      setFormData({});
-    }
+  const openModal = (item: unknown = null) => {
+    const normalized = item && typeof item === 'object' ? (item as FormState) : null;
+    setEditingItem(normalized);
+    setFormData(normalized ? { ...normalized } : {});
     setIsModalOpen(true);
   };
 
@@ -96,46 +107,53 @@ export default function AdminDashboard() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
     let result;
     
     if (activeTab === 'services') {
-      const { title, description } = formData;
+      const title = (formData.title || '') as string;
+      const description = (formData.description || '') as string;
       if (!title || !description) return alert('Please fill in all fields');
-      result = await saveService({ ...formData, id: editingItem?.id });
+      result = await saveService({ id: editingItem?.id, title, description });
       if (result.error) alert('Error saving service: ' + result.error);
       
     } else if (activeTab === 'clients') {
-      const { name } = formData;
+      const name = (formData.name || '') as string;
       if (!name) return alert('Please fill in all fields');
-      result = await saveClient({ ...formData, id: editingItem?.id });
+      result = await saveClient({ id: editingItem?.id, name });
       if (result.error) alert('Error saving client: ' + result.error);
       
     } else if (activeTab === 'team') {
-      const { name, role } = formData;
+      const name = (formData.name || '') as string;
+      const role = (formData.role || '') as string;
       if (!name || !role) return alert('Please fill in all fields');
-      result = await saveTeam({ ...formData, id: editingItem?.id });
+      result = await saveTeam({ id: editingItem?.id, name, role });
       if (result.error) alert('Error saving team member: ' + result.error);
       
     } else if (activeTab === 'competitions') {
-      const { title, description, registration_link } = formData;
+      const title = (formData.title || '') as string;
+      const description = (formData.description || '') as string;
+      const registration_link = (formData.registration_link || '') as string;
       if (!title || !description) return alert('Please fill in all fields');
-      result = await saveCompetition({ ...formData, id: editingItem?.id });
+      result = await saveCompetition({ id: editingItem?.id, title, description, registration_link });
       if (result.error) alert('Error saving competition: ' + result.error);
       
     } else if (activeTab === 'newsletter') {
-      const { title, content } = formData;
+      const title = (formData.title || '') as string;
+      const content = (formData.content || '') as string;
       if (!title || !content) return alert('Please fill in all fields');
-      result = await saveNewsletter({ ...formData, id: editingItem?.id });
+      result = await saveNewsletter({ id: editingItem?.id, title, content });
       if (result.error) alert('Error saving newsletter: ' + result.error);
       
     } else if (activeTab === 'settings') {
-      const { value } = formData;
+      const value = (formData.value || '') as string;
+      const id = editingItem?.id;
       if (!value) return alert('Please enter a value');
-      result = await saveSetting({ ...formData, id: editingItem?.id });
+      if (!id) return alert('Missing setting id');
+      result = await saveSetting({ id, value });
       if (result.error) alert('Error saving setting: ' + result.error);
     }
 
@@ -378,15 +396,17 @@ export default function AdminDashboard() {
         {/* Sidebar */}
         <aside className="w-full md:w-64 bg-white rounded-xl shadow-sm p-4 h-fit">
           <ul className="space-y-2">
-            {[
-              { id: 'services', label: 'Services' },
-              { id: 'clients', label: 'Clients' },
-              { id: 'team', label: 'Team' },
-              { id: 'competitions', label: 'Competitions' },
-              { id: 'newsletter', label: 'Newsletter' },
-              { id: 'registrations', label: 'Registrations' },
-              { id: 'settings', label: 'General Settings' },
-            ].map((tab) => (
+            {(
+              [
+                { id: 'services', label: 'Services' },
+                { id: 'clients', label: 'Clients' },
+                { id: 'team', label: 'Team' },
+                { id: 'competitions', label: 'Competitions' },
+                { id: 'newsletter', label: 'Newsletter' },
+                { id: 'registrations', label: 'Registrations' },
+                { id: 'settings', label: 'General Settings' },
+              ] as const
+            ).map((tab) => (
               <li key={tab.id}>
                 <button
                   onClick={() => setActiveTab(tab.id)}

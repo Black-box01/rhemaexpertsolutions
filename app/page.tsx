@@ -265,7 +265,7 @@ export default async function Home() {
                 <div>
                    <h2 className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm">SMART CODERS</h2>
                    <p className="text-xl md:text-2xl font-bold text-white mt-1">NATIONAL COMPETITION</p>
-                   <p className="text-yellow-300 font-bold italic tracking-wider mt-2 text-lg">"I CAN CODE"</p>
+                   <p className="text-yellow-300 font-bold italic tracking-wider mt-2 text-lg">&quot;I CAN CODE&quot;</p>
                 </div>
               </div>
               <p className="text-blue-50 text-lg mb-8 max-w-2xl leading-relaxed font-light">
@@ -295,7 +295,7 @@ export default async function Home() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span className="font-medium">Prepare for the "I Can Code" Challenge</span>
+                        <span className="font-medium">Prepare for the &quot;I Can Code&quot; Challenge</span>
                    </div>
               </div>
 
@@ -308,7 +308,7 @@ export default async function Home() {
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50 pointer-events-none"></div>
                 
                 {/* Floating Coding Image Badge */}
-                <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-4 border-white/20 shadow-xl overflow-hidden z-20 animate-bounce-slow">
+                <div className="absolute -top-8 -right-8 w-42 h-42 rounded-full border-4 border-white/20 shadow-xl overflow-hidden z-20 animate-bounce">
                   <Image
                     src="/img/coding.jpg"
                     alt="Coding Badge"
@@ -355,7 +355,7 @@ export default async function Home() {
                 The firm blaze the impact of Technology in all sphere of learning and equally engages in other services such as Installation and Maintenance of CCTV Systems, Website Designs & Development: Web App and Mobile App, Drone Technology & Database Management, CYBER SECURITY, majoring on; Ethical Hacking, Digital Forensics, Penetration Testing and Vulnerability Assessment, STEM AVIATION, DIGITAL MARKETING, DATA ANALYSIS: Excel, Power BI.
               </p>
               <p className="text-gray-700 mb-4 text-justify">
-                Our mission is to bridge the gap between innovation and implementation delivering tailored to meet the {getContent('about', 'title', 'Transforming Ideas Into Reality')}. {getContent('about', 'intro', 'Rhema Expert Solutions is a premier technology company based in Nigeria, dedicated to providing innovative solutions across multiple technological domains.')}
+                Our mission is to bridge the gap between innovation and implementation, delivering tailored solutions that drive growth and excellence.
               </p>
               <p className="text-gray-700 mb-4 text-justify">
                 <strong>RHEMA EXPERT SOLUTIONS</strong> is working endlessly to become a major player in the Tech-World in terms of product efficiency, distribution and services. By leveraging a well thought out business plans executed by a skilled Management Team, RHEMA EXPERT SOLUTIONS will achieve its goals and vision in a short while.
@@ -363,8 +363,17 @@ export default async function Home() {
               <p className="text-gray-700 mb-6 text-justify">
                 The firm source for products from affiliate companies in Europe, Asia and India.
               </p>
-              
-              <div className="grid grid-cols-3 gap-2 mt-6">
+              <div className="mt-6">
+                <a 
+                  href="#projects" 
+                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
+                >
+                  View More Projects
+                </a>
+              </div>
+            </div>
+            <div className="md:w-1/2 md:pl-10">
+              <div className="grid grid-cols-3 gap-2 mb-8">
                 {aboutImages.map((src, i) => (
                   <div key={i} className="relative h-24 rounded-lg overflow-hidden shadow-sm bg-gray-100">
                     <ImageWithSkeleton
@@ -376,16 +385,6 @@ export default async function Home() {
                   </div>
                 ))}
               </div>
-              <div className="mt-6">
-                <a 
-                  href="#projects" 
-                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
-                >
-                  View More Projects
-                </a>
-              </div>
-            </div>
-            <div className="md:w-1/2 md:pl-10">
               <div className="bg-gray-100 p-8 rounded-2xl">
                 <h4 className="text-xl font-bold text-blue-900 mb-4">Contact Information</h4>
                 <ul className="space-y-3">

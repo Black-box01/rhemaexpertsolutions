@@ -1,9 +1,24 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { revalidatePath } from 'next/cache';
 
-export async function submitRegistration(formData: any) {
+type RegistrationInput = {
+  full_name: string;
+  gender: string;
+  date_of_birth?: string;
+  age: string | number;
+  school_name: string;
+  school_address?: string;
+  school_phone?: string;
+  class_level: string;
+  category: string;
+  parent_name: string;
+  parent_phone: string;
+  parent_email?: string;
+  competition_name?: string;
+};
+
+export async function submitRegistration(formData: RegistrationInput) {
   try {
     const { 
       full_name, 
@@ -33,7 +48,7 @@ export async function submitRegistration(formData: any) {
           full_name,
           gender,
           date_of_birth: date_of_birth || null,
-          age: parseInt(age),
+          age: typeof age === 'string' ? parseInt(age, 10) : age,
           school_name,
           school_address,
           school_phone,
@@ -54,9 +69,10 @@ export async function submitRegistration(formData: any) {
     }
 
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
     console.error('Unexpected Registration Error:', error);
-    return { success: false, error: error.message || 'An unexpected error occurred.' };
+    return { success: false, error: message };
   }
 }
 
@@ -70,7 +86,8 @@ export async function fetchRegistrations() {
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
   }
 }

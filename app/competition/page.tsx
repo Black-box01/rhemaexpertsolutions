@@ -76,7 +76,7 @@ export default function CompetitionPage() {
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-md">
             SMART CODERS <br/> <span className="text-yellow-400">NATIONAL COMPETITION</span>
           </h1>
-          <p className="text-xl md:text-2xl font-light text-blue-100 italic">"I CAN CODE"</p>
+          <p className="text-xl md:text-2xl font-light text-blue-100 italic">&quot;I CAN CODE&quot;</p>
           <div className="mt-8">
             <a href="#register" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:-translate-y-1 transition-all inline-block border-2 border-red-500">
               REGISTER FOR FREE

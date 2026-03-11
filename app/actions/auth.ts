@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function login(password: string) {
   // Try to get password from Supabase
-  let { data: passwordData, error } = await supabaseAdmin
+  const { data: passwordData } = await supabaseAdmin
     .from('rhema_content')
     .select('value')
     .eq('section', 'admin')

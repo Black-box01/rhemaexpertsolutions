@@ -4,6 +4,13 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkAuth } from '@/app/actions/auth';
 import { revalidatePath } from 'next/cache';
 
+type ServiceInput = { id?: string; title: string; description: string };
+type ClientInput = { id?: string; name: string };
+type TeamInput = { id?: string; name: string; role: string };
+type CompetitionInput = { id?: string; title: string; description: string; registration_link?: string | null };
+type NewsletterInput = { id?: string; title: string; content: string };
+type SettingInput = { id: string; value: string };
+
 async function ensureAuthenticated() {
   const isAuth = await checkAuth();
   if (!isAuth) {
@@ -11,7 +18,7 @@ async function ensureAuthenticated() {
   }
 }
 
-export async function saveService(data: any) {
+export async function saveService(data: ServiceInput) {
   await ensureAuthenticated();
   
   const { id, title, description } = data;
@@ -84,12 +91,13 @@ export async function fetchDashboardData() {
         settings: allSettings
       }
     };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
   }
 }
 
-export async function saveClient(data: any) {
+export async function saveClient(data: ClientInput) {
   await ensureAuthenticated();
   
   const { id, name } = data;
@@ -106,7 +114,7 @@ export async function saveClient(data: any) {
   return { success: true };
 }
 
-export async function saveTeam(data: any) {
+export async function saveTeam(data: TeamInput) {
   await ensureAuthenticated();
   
   const { id, name, role } = data;
@@ -123,7 +131,7 @@ export async function saveTeam(data: any) {
   return { success: true };
 }
 
-export async function saveCompetition(data: any) {
+export async function saveCompetition(data: CompetitionInput) {
   await ensureAuthenticated();
   
   const { id, title, description, registration_link } = data;
@@ -140,7 +148,7 @@ export async function saveCompetition(data: any) {
   return { success: true };
 }
 
-export async function saveNewsletter(data: any) {
+export async function saveNewsletter(data: NewsletterInput) {
   await ensureAuthenticated();
   
   const { id, title, content } = data;
@@ -157,7 +165,7 @@ export async function saveNewsletter(data: any) {
   return { success: true };
 }
 
-export async function saveSetting(data: any) {
+export async function saveSetting(data: SettingInput) {
   await ensureAuthenticated();
   
   const { id, value } = data;
