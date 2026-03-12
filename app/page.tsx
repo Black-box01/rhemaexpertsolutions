@@ -166,20 +166,60 @@ export default async function Home() {
       "3 STARS EDUCATIONAL CENTER, Borikiri, Port Harcourt, Rivers State"
     ];
 
-  const teamToRender = dynamicTeam && dynamicTeam.length > 0
-    ? dynamicTeam
-    : [
-        {
-          name: "FRED C. ODII",
-          role: "Head of Operations (HOO)",
-          image_url: "/img/staff/fred.jpeg"
-        },
-        {
-          name: "NWACHUKWU ONYEKACHI",
-          role: "Chief Technology Officer (CTO)",
-          image_url: "/img/staff/onyekachi.jpeg"
-        }
-      ];
+  const staticTeamMembers = [
+    {
+      name: "FRED C. ODII",
+      role: "Head of Operations (HOO)",
+      image_url: "/img/staff/fred.jpeg"
+    },
+    {
+      name: "CHIAMAKA OKONKWO",
+      role: "Admin Officer",
+      image_url: "/img/staff/admin.jpg"
+    },
+    {
+      name: "ADEBOLA ADEYEMI",
+      role: "STEM Instructor",
+      image_url: "/img/staff/instructor.jpg"
+    },
+    {
+      name: "NWACHUKWU ONYEKACHI",
+      role: "Chief Technology Officer (CTO)",
+      image_url: "/img/staff/onyekachi.jpeg"
+    },
+    {
+      name: "CHINEDU OKAFOR",
+      role: "Remote Software Engineer",
+      image_url: "/img/staff/remote%20software%20engineer.jpg"
+    }
+  ];
+
+  const teamToRender = (() => {
+    const base = dynamicTeam && dynamicTeam.length > 0 ? dynamicTeam : [];
+
+    const merged = [
+      ...base,
+      ...staticTeamMembers.filter((s) => {
+        const sName = (s.name || '').toLowerCase();
+        const sImg = s.image_url || '';
+        return !base.some((d) => {
+          const dName = (d.name || '').toLowerCase();
+          const dImg = d.image_url || '';
+          return (sImg && dImg && sImg === dImg) || (sName && dName && sName === dName);
+        });
+      })
+    ];
+
+    const orderRank = (member: { name?: string | null; image_url?: string | null }) => {
+      const img = member.image_url || '';
+      const name = (member.name || '').toLowerCase();
+      if (img.includes('/img/staff/fred') || name.includes('fred')) return 1;
+      if (img.includes('/img/staff/admin') || name.includes('admin')) return 2;
+      return 100;
+    };
+
+    return merged.sort((a, b) => orderRank(a) - orderRank(b));
+  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-red-50">
@@ -223,6 +263,88 @@ export default async function Home() {
               <div className="relative z-10 bg-white p-2 rounded-xl md:rounded-3xl shadow-lg md:shadow-2xl overflow-hidden w-full">
                 <HeroSlideshow images={heroImages} />
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="training" className="py-16 bg-white/70 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-blue-900 mb-4 drop-shadow-sm">Online Trainings for Students</h2>
+            <div className="w-20 h-1 bg-gradient-to-r from-red-600 to-red-400 mx-auto rounded-full"></div>
+            <p className="text-gray-700 mt-4 max-w-3xl mx-auto">
+              We offer structured online classes that help students build strong digital skills in coding and STEM, with guided lessons and practical projects.
+            </p>
+          </div>
+
+          <div className="flex flex-col lg:flex-row items-start gap-10">
+            <div className="w-full lg:w-1/2">
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-bold text-blue-900 mb-3">What Students Learn</h3>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    <span>Foundation to advanced programming concepts with hands-on practice.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    <span>Problem-solving, logic building, and real-world project delivery.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    <span>Personalized support and progress tracking throughout the course.</span>
+                  </li>
+                </ul>
+
+                <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                  <a
+                    href="https://drive.google.com/file/d/1AaQ7XtaVHgL9K_zqC_n9o6o2Z96jnOzI/view"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all shadow-md font-bold text-center"
+                  >
+                    Watch Class Preview
+                  </a>
+                  <a
+                    href="#contact"
+                    className="bg-white text-blue-900 border-2 border-blue-900 px-6 py-3 rounded-xl hover:bg-blue-50 transition-all font-bold text-center"
+                  >
+                    Enroll / Ask Questions
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-1/2">
+              <a
+                href="https://drive.google.com/file/d/1AaQ7XtaVHgL9K_zqC_n9o6o2Z96jnOzI/view"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 hover:shadow-xl transition-shadow"
+              >
+                <div className="relative aspect-video bg-gray-100">
+                  <Image
+                    src="/img/preview.png"
+                    alt="Online Training Preview"
+                    fill
+                    className="object-cover"
+                    priority={false}
+                  />
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8 text-red-600 fill-current">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-gray-600">Preview a real class session before enrolling.</p>
+                  <p className="text-blue-900 font-bold mt-1">Click to play on Google Drive</p>
+                </div>
+              </a>
             </div>
           </div>
         </div>
