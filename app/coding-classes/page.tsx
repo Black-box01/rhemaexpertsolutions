@@ -14,6 +14,7 @@ const AVAILABLE_COURSES = [
   { id: 'react-native', name: 'React Native', icon: '📱', description: 'Build cross-platform mobile apps' },
   { id: 'react-js', name: 'React JS', icon: '⚛️', description: 'Modern frontend web development' },
   { id: 'next-js', name: 'Next JS', icon: '▲', description: 'Full-stack React framework' },
+  { id: 'robotics', name: 'Robotics', icon: '🤖', description: 'Build and program physical robots' },
 ];
 
 const PAYMENT_PLANS = [
