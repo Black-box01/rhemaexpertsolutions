@@ -307,10 +307,10 @@ export default async function Home() {
                     Watch Class Preview
                   </a>
                   <a
-                    href="#contact"
-                    className="bg-white text-blue-900 border-2 border-blue-900 px-6 py-3 rounded-xl hover:bg-blue-50 transition-all font-bold text-center"
+                    href="/coding-classes"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md font-bold text-center"
                   >
-                    Enroll / Ask Questions
+                    Register for Coding Classes
                   </a>
                 </div>
               </div>

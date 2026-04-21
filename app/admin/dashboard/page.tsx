@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration } from '@/types/supabase';
+import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
 import { fetchRegistrations } from '@/app/actions/registration';
+import { fetchCodingClassRegistrations, updateCodingClassStatus } from '@/app/actions/coding-classes';
 
-type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations';
+type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes';
 
 type FormState = {
   [key: string]: unknown;
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
   const [newsletters, setNewsletters] = useState<RhemaNewsletter[]>([]);
   const [settings, setSettings] = useState<RhemaContent[]>([]);
   const [registrations, setRegistrations] = useState<RhemaRegistration[]>([]);
+  const [codingClassRegistrations, setCodingClassRegistrations] = useState<RhemaCodingClassRegistration[]>([]);
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -77,6 +79,12 @@ export default function AdminDashboard() {
       const regResult = await fetchRegistrations();
       if (regResult.success) {
         setRegistrations(regResult.data as RhemaRegistration[]);
+      }
+
+      // Fetch coding class registrations
+      const codingResult = await fetchCodingClassRegistrations();
+      if (codingResult.success) {
+        setCodingClassRegistrations(codingResult.data as RhemaCodingClassRegistration[]);
       }
 
     } catch (error) {
@@ -403,7 +411,8 @@ export default function AdminDashboard() {
                 { id: 'team', label: 'Team' },
                 { id: 'competitions', label: 'Competitions' },
                 { id: 'newsletter', label: 'Newsletter' },
-                { id: 'registrations', label: 'Registrations' },
+                { id: 'registrations', label: 'Competition Registrations' },
+                { id: 'coding-classes', label: 'Coding Class Registrations' },
                 { id: 'settings', label: 'General Settings' },
               ] as const
             ).map((tab) => (
@@ -572,7 +581,7 @@ export default function AdminDashboard() {
                 <h3 className="text-xl font-bold text-gray-800">Competition Registrations</h3>
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">{registrations.length} Total</span>
               </div>
-              
+
               <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -612,6 +621,102 @@ export default function AdminDashboard() {
                       <tr>
                         <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic">
                           No registrations found yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'coding-classes' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Coding Class Registrations</h3>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">{codingClassRegistrations.length} Total</span>
+              </div>
+
+              <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Courses</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Payment</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Experience</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {codingClassRegistrations.map((reg) => (
+                      <tr key={reg.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(reg.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{reg.full_name}</div>
+                          <div className="text-sm text-gray-500">{reg.email || 'No email'}</div>
+                          <div className="text-sm text-gray-500">{reg.phone}</div>
+                          <div className="text-xs text-gray-400">{reg.gender}{reg.age ? `, ${reg.age}yrs` : ''}</div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <div className="flex flex-wrap gap-1">
+                            {reg.courses.map((course, i) => (
+                              <span key={i} className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
+                                {course}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">
+                          {reg.payment_plan.replace('_', ' ')}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                          {reg.experience_level}
+                          {reg.preferred_start_date && (
+                            <div className="text-xs text-gray-400">Start: {new Date(reg.preferred_start_date).toLocaleDateString()}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <select
+                            value={reg.status}
+                            onChange={async (e) => {
+                              const result = await updateCodingClassStatus(reg.id, e.target.value);
+                              if (result.success) {
+                                fetchData();
+                              } else {
+                                alert('Error updating status: ' + result.error);
+                              }
+                            }}
+                            className={`text-xs font-bold px-2 py-1 rounded border outline-none cursor-pointer ${
+                              reg.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                : reg.status === 'contacted'
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : reg.status === 'enrolled'
+                                ? 'bg-green-100 text-green-800 border-green-200'
+                                : 'bg-red-100 text-red-800 border-red-200'
+                            }`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="enrolled">Enrolled</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          {reg.notes && (
+                            <div className="text-xs text-gray-500 mt-1 max-w-[150px] truncate" title={reg.notes}>
+                              {reg.notes}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {codingClassRegistrations.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
+                          No coding class registrations found yet.
                         </td>
                       </tr>
                     )}

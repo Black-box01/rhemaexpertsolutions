@@ -79,3 +79,19 @@ export interface RhemaProject {
   description?: string;
   display_order?: number;
 }
+
+export interface RhemaCodingClassRegistration {
+  id: string;
+  created_at: string;
+  full_name: string;
+  email?: string;
+  phone: string;
+  age?: number;
+  gender?: string;
+  courses: string[];
+  payment_plan: string;
+  experience_level?: string;
+  preferred_start_date?: string;
+  notes?: string;
+  status: string;
+}
