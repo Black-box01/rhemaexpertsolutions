@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
-import { fetchRegistrations } from '@/app/actions/registration';
-import { fetchCodingClassRegistrations, updateCodingClassStatus } from '@/app/actions/coding-classes';
+import { fetchRegistrations, updateCompetitionRegistration, deleteCompetitionRegistration } from '@/app/actions/registration';
+import { fetchCodingClassRegistrations, updateCodingClassStatus, updateCodingClassRegistration, deleteCodingClassRegistration } from '@/app/actions/coding-classes';
 
 type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes';
 
@@ -34,6 +34,12 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FormState | null>(null);
   const [formData, setFormData] = useState<FormState>({});
+  
+  // Registration detail modal state
+  const [isRegModalOpen, setIsRegModalOpen] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState<RhemaRegistration | RhemaCodingClassRegistration | null>(null);
+  const [isEditingReg, setIsEditingReg] = useState(false);
+  const [regFormData, setRegFormData] = useState<Partial<RhemaRegistration & RhemaCodingClassRegistration>>({});
 
   // Data states
   const [services, setServices] = useState<RhemaService[]>([]);
@@ -188,6 +194,63 @@ export default function AdminDashboard() {
     const result = await toggleCompetition(comp.id, !comp.is_active);
     if (result.error) alert('Error updating competition: ' + result.error);
     else fetchData();
+  };
+
+  // Registration modal handlers
+  const openRegModal = (reg: RhemaRegistration | RhemaCodingClassRegistration, edit = false) => {
+    setSelectedRegistration(reg);
+    setIsEditingReg(edit);
+    setRegFormData({ ...reg } as Record<string, unknown>);
+    setIsRegModalOpen(true);
+  };
+
+  const closeRegModal = () => {
+    setIsRegModalOpen(false);
+    setSelectedRegistration(null);
+    setIsEditingReg(false);
+    setRegFormData({});
+  };
+
+  const handleRegInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setRegFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveRegistration = async () => {
+    if (!selectedRegistration) return;
+
+    let result;
+    const isCodingClass = 'courses' in selectedRegistration;
+
+    if (isCodingClass) {
+      result = await updateCodingClassRegistration(selectedRegistration.id, regFormData);
+    } else {
+      result = await updateCompetitionRegistration(selectedRegistration.id, regFormData);
+    }
+
+    if (result.error) {
+      alert('Error updating registration: ' + result.error);
+    } else {
+      closeRegModal();
+      fetchData();
+    }
+  };
+
+  const handleDeleteRegistration = async (id: string, isCodingClass: boolean) => {
+    if (!confirm('Are you sure you want to delete this registration?')) return;
+
+    let result;
+    if (isCodingClass) {
+      result = await deleteCodingClassRegistration(id);
+    } else {
+      result = await deleteCompetitionRegistration(id);
+    }
+
+    if (result.error) {
+      alert('Error deleting registration: ' + result.error);
+    } else {
+      fetchData();
+    }
   };
 
   if (loading) return <div className="p-8 text-center text-gray-800">Loading dashboard...</div>;
@@ -395,6 +458,248 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Registration Detail/Edit Modal */}
+      {isRegModalOpen && selectedRegistration && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">
+                {isEditingReg ? 'Edit' : 'View'} Registration - {'courses' in selectedRegistration ? 'Coding Class' : 'Competition'}
+              </h3>
+              <button onClick={closeRegModal} className="text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              {'courses' in selectedRegistration ? (
+                // Coding Class Registration
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      {isEditingReg ? (
+                        <input type="text" name="full_name" value={regFormData.full_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-900 font-medium">{selectedRegistration.full_name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      {isEditingReg ? (
+                        <input type="email" name="email" value={regFormData.email || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.email || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      {isEditingReg ? (
+                        <input type="tel" name="phone" value={regFormData.phone || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.phone}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                      {isEditingReg ? (
+                        <input type="number" name="age" value={regFormData.age || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.age || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Courses</label>
+                    {isEditingReg ? (
+                      <input type="text" name="courses" value={(regFormData.courses || []).join(', ')} onChange={(e) => setRegFormData({ ...regFormData, courses: e.target.value.split(',').map(c => c.trim()).filter(c => c) })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" placeholder="Comma-separated courses" />
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedRegistration as RhemaCodingClassRegistration).courses.map((course, i) => (
+                          <span key={i} className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium">{course}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Plan</label>
+                      {isEditingReg ? (
+                        <select name="payment_plan" value={regFormData.payment_plan || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                          <option value="per_hour">Per Hour</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-700 capitalize">{selectedRegistration.payment_plan?.replace('_', ' ')}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                      {isEditingReg ? (
+                        <select name="experience_level" value={regFormData.experience_level || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Advanced</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-700 capitalize">{selectedRegistration.experience_level || 'beginner'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Start Date</label>
+                      {isEditingReg ? (
+                        <input type="date" name="preferred_start_date" value={regFormData.preferred_start_date || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.preferred_start_date ? new Date(selectedRegistration.preferred_start_date).toLocaleDateString() : 'Not specified'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    {isEditingReg ? (
+                      <textarea name="notes" value={regFormData.notes || ''} onChange={handleRegInputChange} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                    ) : (
+                      <p className="text-gray-700">{selectedRegistration.notes || 'No notes'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" value={regFormData.status || selectedRegistration.status} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="pending">Pending</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="enrolled">Enrolled</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                // Competition Registration
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      {isEditingReg ? (
+                        <input type="text" name="full_name" value={regFormData.full_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-900 font-medium">{selectedRegistration.full_name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                      {isEditingReg ? (
+                        <select name="gender" value={regFormData.gender || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.gender}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                      {isEditingReg ? (
+                        <input type="number" name="age" value={regFormData.age || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.age}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                      {isEditingReg ? (
+                        <input type="date" name="date_of_birth" value={regFormData.date_of_birth || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.date_of_birth || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">School Name</label>
+                    {isEditingReg ? (
+                      <input type="text" name="school_name" value={regFormData.school_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                    ) : (
+                      <p className="text-gray-900 font-medium">{selectedRegistration.school_name}</p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Class Level</label>
+                      {isEditingReg ? (
+                        <input type="text" name="class_level" value={regFormData.class_level || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.class_level}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                      {isEditingReg ? (
+                        <select name="category" value={regFormData.category || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                          <option value="LOWER PRIMARY">Lower Primary</option>
+                          <option value="UPPER PRIMARY">Upper Primary</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.category}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
+                      {isEditingReg ? (
+                        <input type="text" name="parent_name" value={regFormData.parent_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.parent_name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Parent Phone</label>
+                      {isEditingReg ? (
+                        <input type="tel" name="parent_phone" value={regFormData.parent_phone || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                      ) : (
+                        <p className="text-gray-700">{selectedRegistration.parent_phone}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
+                    {isEditingReg ? (
+                      <input type="email" name="parent_email" value={regFormData.parent_email || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
+                    ) : (
+                      <p className="text-gray-700">{selectedRegistration.parent_email || 'Not provided'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" value={regFormData.status || selectedRegistration.status} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
+              <button onClick={closeRegModal} className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                Close
+              </button>
+              {isEditingReg && (
+                <button onClick={handleSaveRegistration} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
+                  Save Changes
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-900">Rhema Admin Dashboard</h1>
         <button onClick={handleLogout} className="text-red-600 hover:text-red-800 font-medium">Logout</button>
@@ -591,6 +896,7 @@ export default function AdminDashboard() {
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">School</th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Parent Contact</th>
+                      <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -615,11 +921,16 @@ export default function AdminDashboard() {
                           <div className="text-sm text-gray-900">{reg.parent_name}</div>
                           <div className="text-sm text-gray-500">{reg.parent_phone}</div>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => openRegModal(reg, false)} className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                          <button onClick={() => openRegModal(reg, true)} className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                          <button onClick={() => handleDeleteRegistration(reg.id, false)} className="text-red-600 hover:text-red-900">Delete</button>
+                        </td>
                       </tr>
                     ))}
                     {registrations.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic">
+                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
                           No registrations found yet.
                         </td>
                       </tr>
@@ -648,6 +959,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Experience</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -716,11 +1028,16 @@ export default function AdminDashboard() {
                             </div>
                           )}
                         </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => openRegModal(reg, false)} className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                          <button onClick={() => openRegModal(reg, true)} className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                          <button onClick={() => handleDeleteRegistration(reg.id, true)} className="text-red-600 hover:text-red-900">Delete</button>
+                        </td>
                       </tr>
                     ))}
                     {codingClassRegistrations.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-6 py-10 text-center text-gray-500 italic">
+                        <td colSpan={8} className="px-6 py-10 text-center text-gray-500 italic">
                           No coding class registrations found yet.
                         </td>
                       </tr>

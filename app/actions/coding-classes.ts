@@ -114,3 +114,43 @@ export async function updateCodingClassStatus(id: string, status: string) {
     return { success: false, error: message };
   }
 }
+
+export async function updateCodingClassRegistration(id: string, data: Partial<CodingClassInput> & { status?: string }) {
+  try {
+    const isAuth = await checkAuth();
+    if (!isAuth) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const { error } = await supabaseAdmin
+      .from('rhema_coding_class_registrations')
+      .update(data)
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
+
+export async function deleteCodingClassRegistration(id: string) {
+  try {
+    const isAuth = await checkAuth();
+    if (!isAuth) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const { error } = await supabaseAdmin
+      .from('rhema_coding_class_registrations')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}

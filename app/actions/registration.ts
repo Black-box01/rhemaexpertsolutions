@@ -98,3 +98,33 @@ export async function fetchRegistrations() {
     return { success: false, error: message };
   }
 }
+
+export async function updateCompetitionRegistration(id: string, data: Partial<RegistrationInput> & { status?: string }) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('rhema_registrations')
+      .update(data)
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
+
+export async function deleteCompetitionRegistration(id: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('rhema_registrations')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
