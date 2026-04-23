@@ -646,6 +646,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Courses</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Payment</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Experience</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
@@ -675,8 +676,12 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                           {reg.experience_level}
-                          {reg.preferred_start_date && (
-                            <div className="text-xs text-gray-400">Start: {new Date(reg.preferred_start_date).toLocaleDateString()}</div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {reg.preferred_start_date ? (
+                            <span className="font-medium">{new Date(reg.preferred_start_date).toLocaleDateString()}</span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">Not specified</span>
                           )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -715,7 +720,7 @@ export default function AdminDashboard() {
                     ))}
                     {codingClassRegistrations.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
+                        <td colSpan={7} className="px-6 py-10 text-center text-gray-500 italic">
                           No coding class registrations found yet.
                         </td>
                       </tr>

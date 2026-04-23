@@ -1,6 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { sendCompetitionRegistrationEmail } from '@/lib/email';
 
 type RegistrationInput = {
   full_name: string;
@@ -66,6 +67,12 @@ export async function submitRegistration(formData: RegistrationInput) {
     if (error) {
       console.error('Registration Error:', error);
       return { success: false, error: error.message };
+    }
+
+    // Send email notification to admins
+    const emailResult = await sendCompetitionRegistrationEmail(formData);
+    if (!emailResult.success) {
+      console.warn('Failed to send registration email:', emailResult.error);
     }
 
     return { success: true, data };

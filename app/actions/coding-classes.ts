@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkAuth } from '@/app/actions/auth';
+import { sendCodingClassRegistrationEmail } from '@/lib/email';
 
 export type CodingClassInput = {
   full_name: string;
@@ -58,6 +59,12 @@ export async function submitCodingClassRegistration(formData: CodingClassInput) 
     if (error) {
       console.error('Coding Class Registration Error:', error);
       return { success: false, error: error.message };
+    }
+
+    // Send email notification to admins
+    const emailResult = await sendCodingClassRegistrationEmail(formData);
+    if (!emailResult.success) {
+      console.warn('Failed to send coding class registration email:', emailResult.error);
     }
 
     return { success: true, data };
