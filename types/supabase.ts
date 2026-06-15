@@ -95,3 +95,18 @@ export interface RhemaCodingClassRegistration {
   notes?: string;
   status: string;
 }
+
+export interface RhemaStaffNote {
+  id: string;
+  created_at: string;
+  updated_at?: string;
+  title: string;
+  content?: string;
+  author: string;
+  category?: string;
+  priority?: string;
+  status?: string;
+  tags?: string[];
+  file_urls?: (string | { name: string; url: string })[];
+  is_pinned?: boolean;
+}

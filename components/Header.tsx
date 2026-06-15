@@ -39,7 +39,7 @@ export default function Header() {
             <li><a href="#projects" className="text-blue-900 hover:text-red-600 transition-colors">Projects</a></li>
             <li><a href="/coding-classes" className="text-blue-900 hover:text-red-600 transition-colors font-semibold">Coding Classes</a></li>
             <li><a href="#competitions" className="text-red-600 hover:text-blue-900 transition-colors animate-pulse">Competitions</a></li>
-            <li><a href="#contact" className="text-blue-900 hover:text-red-600 transition-colors">Contact</a></li>
+            <li className="ml-auto"><a href="#contact" className="text-blue-900 hover:text-red-600 transition-colors">Contact</a></li>
             <li>
               <a 
                 href="https://web.facebook.com/profile.php?id=100092432334656" 
@@ -106,6 +106,8 @@ export default function Header() {
           <a href="#projects" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Projects</a>
           <a href="/coding-classes" onClick={closeMenu} className="text-lg font-medium text-blue-900 hover:text-blue-600 border-b border-gray-50 pb-2">Coding Classes</a>
           <a href="#competitions" onClick={closeMenu} className="text-lg font-medium text-red-600 hover:text-blue-900 border-b border-gray-50 pb-2">Competitions</a>
+          <hr className="my-2 border-gray-200" />
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Connect</p>
           <a href="#contact" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Contact</a>
           <a 
             href="https://web.facebook.com/profile.php?id=100092432334656" 

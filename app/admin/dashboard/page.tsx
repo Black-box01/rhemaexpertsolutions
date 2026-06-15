@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration } from '@/types/supabase';
+import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration, RhemaStaffNote } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
 import { fetchRegistrations, updateCompetitionRegistration, deleteCompetitionRegistration } from '@/app/actions/registration';
 import { fetchCodingClassRegistrations, updateCodingClassStatus, updateCodingClassRegistration, deleteCodingClassRegistration } from '@/app/actions/coding-classes';
+import { fetchStaffNotes, saveStaffNote, deleteStaffNote, uploadNoteFile, NoteInput } from '@/app/actions/notes';
 
-type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes';
+type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes' | 'staff-notes';
 
 type FormState = {
   [key: string]: unknown;
@@ -50,6 +51,20 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState<RhemaContent[]>([]);
   const [registrations, setRegistrations] = useState<RhemaRegistration[]>([]);
   const [codingClassRegistrations, setCodingClassRegistrations] = useState<RhemaCodingClassRegistration[]>([]);
+  const [staffNotes, setStaffNotes] = useState<RhemaStaffNote[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesPage, setNotesPage] = useState(1);
+  const [notesTotal, setNotesTotal] = useState(0);
+  const [notesSearch, setNotesSearch] = useState('');
+  const [notesFilterStatus, setNotesFilterStatus] = useState('');
+  const [notesFilterCategory, setNotesFilterCategory] = useState('');
+  const [notesFilterPriority, setNotesFilterPriority] = useState('');
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<RhemaStaffNote | null>(null);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteFormData, setNoteFormData] = useState<Partial<RhemaStaffNote>>({});
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -62,6 +77,12 @@ export default function AdminDashboard() {
     };
     verifyAuth();
   }, [router]);
+
+  useEffect(() => {
+    if (activeTab === 'staff-notes') {
+      fetchNotes();
+    }
+  }, [activeTab, notesPage, notesSearch, notesFilterStatus, notesFilterCategory, notesFilterPriority]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -91,6 +112,11 @@ export default function AdminDashboard() {
       const codingResult = await fetchCodingClassRegistrations();
       if (codingResult.success) {
         setCodingClassRegistrations(codingResult.data as RhemaCodingClassRegistration[]);
+      }
+
+      // Fetch staff notes
+      if (activeTab === 'staff-notes') {
+        await fetchNotes();
       }
 
     } catch (error) {
@@ -250,6 +276,186 @@ export default function AdminDashboard() {
       alert('Error deleting registration: ' + result.error);
     } else {
       fetchData();
+    }
+  };
+
+  // E-Note handlers
+  const fetchNotes = async () => {
+    setNotesLoading(true);
+    const result = await fetchStaffNotes({
+      page: notesPage,
+      search: notesSearch,
+      status: notesFilterStatus,
+      category: notesFilterCategory,
+      priority: notesFilterPriority
+    });
+    if (result.success) {
+      setStaffNotes(result.data || []);
+      setNotesTotal(result.count || 0);
+    }
+    setNotesLoading(false);
+  };
+
+  const openNoteModal = (note?: RhemaStaffNote, edit = false) => {
+    if (note) {
+      setSelectedNote(note);
+      setIsEditingNote(edit);
+      setNoteFormData({ ...note });
+    } else {
+      setSelectedNote(null);
+      setIsEditingNote(true);
+      setNoteFormData({ category: 'general', priority: 'normal', status: 'active', is_pinned: false, tags: [], file_urls: [] });
+    }
+    setIsNoteModalOpen(true);
+  };
+
+  const closeNoteModal = () => {
+    setIsNoteModalOpen(false);
+    setSelectedNote(null);
+    setIsEditingNote(false);
+    setNoteFormData({});
+  };
+
+  const handleNoteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setNoteFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setNoteFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleNoteFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const fileUrls: (string | { name: string; url: string })[] = [...(noteFormData.file_urls || [])];
+    
+    for (const file of Array.from(files)) {
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        continue;
+      }
+      
+      // Add to uploading files
+      setUploadingFiles(prev => [...prev, file.name]);
+      
+      try {
+        const result = await uploadNoteFile(file);
+        if (result.success && result.url) {
+          // Store object with name and url
+          fileUrls.push({ name: file.name, url: result.url });
+        } else {
+          alert(`Failed to upload "${file.name}": ${result.error}`);
+        }
+      } catch (error) {
+        alert(`Failed to upload "${file.name}": Unexpected error`);
+      } finally {
+        // Remove from uploading files
+        setUploadingFiles(prev => prev.filter(f => f !== file.name));
+      }
+    }
+    
+    setNoteFormData(prev => ({ ...prev, file_urls: fileUrls }));
+    
+    // Reset the input value so the same file can be uploaded again if needed
+    e.target.value = '';
+  };
+
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragIn = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragOut = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    
+    const fileUrls: (string | { name: string; url: string })[] = [...(noteFormData.file_urls || [])];
+    
+    for (const file of Array.from(files)) {
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        continue;
+      }
+      
+      // Add to uploading files
+      setUploadingFiles(prev => [...prev, file.name]);
+      
+      try {
+        const result = await uploadNoteFile(file);
+        if (result.success && result.url) {
+          // Store object with name and url
+          fileUrls.push({ name: file.name, url: result.url });
+        } else {
+          alert(`Failed to upload "${file.name}": ${result.error}`);
+        }
+      } catch (error) {
+        alert(`Failed to upload "${file.name}": Unexpected error`);
+      } finally {
+        // Remove from uploading files
+        setUploadingFiles(prev => prev.filter(f => f !== file.name));
+      }
+    }
+    
+    setNoteFormData(prev => ({ ...prev, file_urls: fileUrls }));
+  };
+
+  const handleRemoveNoteFile = (fileData: { name: string; url: string } | string) => {
+    const urlToRemove = typeof fileData === 'string' ? fileData : fileData.url;
+    setNoteFormData(prev => ({
+      ...prev,
+      file_urls: (prev.file_urls || []).filter(f => {
+        const fileUrl = typeof f === 'string' ? f : f.url;
+        return fileUrl !== urlToRemove;
+      })
+    }));
+  };
+
+  const handleSaveNote = async () => {
+    if (!noteFormData.title || !noteFormData.author) {
+      alert('Please fill in Title and Author');
+      return;
+    }
+
+    const result = await saveStaffNote(noteFormData as NoteInput);
+    if (result.error) {
+      alert('Error saving note: ' + result.error);
+    } else {
+      closeNoteModal();
+      fetchNotes();
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+    
+    const result = await deleteStaffNote(id);
+    if (result.error) {
+      alert('Error deleting note: ' + result.error);
+    } else {
+      fetchNotes();
     }
   };
 
@@ -700,6 +906,278 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Note Modal */}
+      {isNoteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={closeNoteModal}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white px-6 py-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">
+                {isEditingNote ? (selectedNote ? 'Edit Note' : 'Create New Note') : 'View Note'}
+              </h2>
+              <button onClick={closeNoteModal} className="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                {isEditingNote ? (
+                  <input
+                    type="text"
+                    name="title"
+                    value={noteFormData.title || ''}
+                    onChange={handleNoteInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
+                    placeholder="Enter note title"
+                  />
+                ) : (
+                  <p className="text-gray-900 font-semibold">{selectedNote?.title}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Content <span className="text-gray-400 font-normal">(Optional)</span></label>
+                {isEditingNote ? (
+                  <textarea
+                    name="content"
+                    value={noteFormData.content || ''}
+                    onChange={handleNoteInputChange}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
+                    placeholder="Enter note content (optional)"
+                  />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedNote?.content || '(No content)'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Author *</label>
+                {isEditingNote ? (
+                  <input
+                    type="text"
+                    name="author"
+                    value={noteFormData.author || ''}
+                    onChange={handleNoteInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
+                    placeholder="Author name"
+                  />
+                ) : (
+                  <p className="text-gray-700">{selectedNote?.author}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  {isEditingNote ? (
+                    <select name="category" value={noteFormData.category || 'general'} onChange={handleNoteInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="general">General</option>
+                      <option value="student">Student</option>
+                      <option value="admin">Admin</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="announcement">Announcement</option>
+                    </select>
+                  ) : (
+                    <p className="text-gray-700 capitalize">{selectedNote?.category || 'general'}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  {isEditingNote ? (
+                    <select name="priority" value={noteFormData.priority || 'normal'} onChange={handleNoteInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  ) : (
+                    <p className="text-gray-700 capitalize">{selectedNote?.priority || 'normal'}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  {isEditingNote ? (
+                    <select name="status" value={noteFormData.status || 'active'} onChange={handleNoteInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="active">Active</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                  ) : (
+                    <p className="text-gray-700 capitalize">{selectedNote?.status || 'active'}</p>
+                  )}
+                </div>
+
+                <div className="flex items-end">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="is_pinned"
+                      checked={noteFormData.is_pinned || false}
+                      onChange={handleNoteInputChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Pin this note</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                {isEditingNote ? (
+                  <input
+                    type="text"
+                    name="tags"
+                    value={Array.isArray(noteFormData.tags) ? noteFormData.tags.join(', ') : ''}
+                    onChange={(e) => {
+                      const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+                      setNoteFormData(prev => ({ ...prev, tags }));
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
+                    placeholder="e.g., important, meeting, deadline"
+                  />
+                ) : (
+                  <p className="text-gray-700">{(selectedNote?.tags || []).join(', ') || 'No tags'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
+                {isEditingNote && (
+                  <div
+                    className="relative"
+                    onDragEnter={handleDragIn}
+                    onDragLeave={handleDragOut}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                      isDragging 
+                        ? 'border-blue-500 bg-blue-50 scale-105' 
+                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                    }`}>
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3"></path>
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-600 font-semibold">
+                          <span className="text-blue-600 hover:text-blue-700">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PDF, DOC, DOCX, PNG, JPG, GIF (MAX. 10MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleNoteFileUpload}
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.txt,.xls,.xlsx,.ppt,.pptx"
+                      />
+                    </label>
+                  </div>
+                )}
+                
+                {/* Uploading files with loading indicators */}
+                {uploadingFiles.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Uploading...</p>
+                    {uploadingFiles.map((fileName, idx) => (
+                      <div key={`uploading-${idx}`} className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded">
+                        <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm text-blue-700 truncate flex-1">{fileName}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Uploaded files */}
+                {noteFormData.file_urls && noteFormData.file_urls.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Uploaded Files:</p>
+                    {noteFormData.file_urls.map((fileData, idx) => {
+                      const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
+                      const url = typeof fileData === 'string' ? fileData : fileData.url;
+                      
+                      return (
+                        <div key={idx} className="flex items-center justify-between bg-green-50 border border-green-200 px-3 py-2 rounded">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-green-700 hover:text-green-900 font-medium truncate">
+                              {fileName}
+                            </a>
+                          </div>
+                          {isEditingNote && (
+                            <button 
+                              onClick={() => handleRemoveNoteFile(fileData)} 
+                              className="text-red-600 hover:text-red-800 text-sm font-medium ml-2 flex-shrink-0"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {!isEditingNote && selectedNote?.file_urls && selectedNote.file_urls.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Attached Files:</p>
+                    {selectedNote.file_urls.map((fileData, idx) => {
+                      const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
+                      const url = typeof fileData === 'string' ? fileData : fileData.url;
+                      
+                      return (
+                        <a 
+                          key={idx} 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                          </svg>
+                          <span className="text-sm text-gray-700 font-medium truncate">{fileName}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Created</label>
+                <p className="text-gray-700">{selectedNote?.created_at ? new Date(selectedNote.created_at).toLocaleString() : 'N/A'}</p>
+              </div>
+
+              {selectedNote?.updated_at && selectedNote.updated_at !== selectedNote.created_at && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
+                  <p className="text-gray-700">{new Date(selectedNote.updated_at).toLocaleString()}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
+              <button onClick={closeNoteModal} className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                Close
+              </button>
+              {isEditingNote && (
+                <button onClick={handleSaveNote} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
+                  Save Changes
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-900">Rhema Admin Dashboard</h1>
         <button onClick={handleLogout} className="text-red-600 hover:text-red-800 font-medium">Logout</button>
@@ -718,6 +1196,7 @@ export default function AdminDashboard() {
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'registrations', label: 'Competition Registrations' },
                 { id: 'coding-classes', label: 'Coding Class Registrations' },
+                { id: 'staff-notes', label: 'Staff E-Notes' },
                 { id: 'settings', label: 'General Settings' },
               ] as const
             ).map((tab) => (
@@ -1045,6 +1524,174 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'staff-notes' && (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Staff E-Notes</h2>
+                <button
+                  onClick={() => openNoteModal()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add New Note
+                </button>
+              </div>
+
+              {/* Search and Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Search notes..."
+                  value={notesSearch}
+                  onChange={(e) => { setNotesSearch(e.target.value); setNotesPage(1); }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                />
+                <select
+                  value={notesFilterStatus}
+                  onChange={(e) => { setNotesFilterStatus(e.target.value); setNotesPage(1); }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="" className="text-gray-500">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+                <select
+                  value={notesFilterCategory}
+                  onChange={(e) => { setNotesFilterCategory(e.target.value); setNotesPage(1); }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="" className="text-gray-500">All Categories</option>
+                  <option value="general">General</option>
+                  <option value="student">Student</option>
+                  <option value="admin">Admin</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="announcement">Announcement</option>
+                </select>
+                <select
+                  value={notesFilterPriority}
+                  onChange={(e) => { setNotesFilterPriority(e.target.value); setNotesPage(1); }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="" className="text-gray-500">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+
+              {/* Notes List */}
+              {notesLoading ? (
+                <div className="text-center py-8 text-gray-600">Loading notes...</div>
+              ) : (
+                <>
+                  <div className="grid gap-4">
+                    {staffNotes.map((note) => (
+                      <div key={note.id} className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${note.is_pinned ? 'bg-yellow-50 border-yellow-300' : ''}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {note.is_pinned && <span className="text-yellow-600">📌</span>}
+                              <h3 className="text-lg font-bold text-gray-800">{note.title}</h3>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+                              <span>By: {note.author}</span>
+                              <span>•</span>
+                              <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex gap-2 mb-2">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                note.category === 'urgent' ? 'bg-red-100 text-red-800' :
+                                note.category === 'announcement' ? 'bg-purple-100 text-purple-800' :
+                                note.category === 'student' ? 'bg-blue-100 text-blue-800' :
+                                note.category === 'admin' ? 'bg-gray-100 text-gray-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {note.category || 'general'}
+                              </span>
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                note.priority === 'urgent' ? 'bg-red-200 text-red-900' :
+                                note.priority === 'high' ? 'bg-orange-200 text-orange-900' :
+                                note.priority === 'low' ? 'bg-gray-200 text-gray-700' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {note.priority || 'normal'}
+                              </span>
+                            </div>
+                            {note.content ? (
+                              <p className="text-gray-700 text-sm line-clamp-2">{note.content}</p>
+                            ) : note.file_urls && note.file_urls.length > 0 ? (
+                              <p className="text-gray-500 text-sm italic">📎 Attachment-only note</p>
+                            ) : (
+                              <p className="text-gray-400 text-sm italic">No content</p>
+                            )}
+                            {note.file_urls && note.file_urls.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs text-gray-600 font-semibold mb-1">Attachments:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {note.file_urls.map((fileData, idx) => {
+                                    const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
+                                    const url = typeof fileData === 'string' ? fileData : fileData.url;
+                                    return (
+                                      <a 
+                                        key={idx} 
+                                        href={url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+                                      >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                        </svg>
+                                        {fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName}
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <button onClick={() => openNoteModal(note, false)} className="text-blue-600 hover:text-blue-900 text-sm font-medium">View</button>
+                            <button onClick={() => openNoteModal(note, true)} className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">Edit</button>
+                            <button onClick={() => handleDeleteNote(note.id)} className="text-red-600 hover:text-red-900 text-sm font-medium">Delete</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {staffNotes.length === 0 && (
+                      <div className="text-center py-8 text-gray-500 italic">
+                        No staff notes found. Create your first note!
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pagination */}
+                  {notesTotal > 50 && (
+                    <div className="flex justify-center items-center gap-4 mt-6 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => setNotesPage(p => Math.max(1, p - 1))}
+                        disabled={notesPage === 1}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-gray-700 font-medium">
+                        Page {notesPage} of {Math.ceil(notesTotal / 50)}
+                      </span>
+                      <button
+                        onClick={() => setNotesPage(p => p + 1)}
+                        disabled={notesPage >= Math.ceil(notesTotal / 50)}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </main>

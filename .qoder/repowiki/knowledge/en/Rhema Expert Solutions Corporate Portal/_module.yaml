@@ -1,0 +1,311 @@
+schema_version: 1
+module_path: ""
+title: Rhema Expert Solutions Corporate Portal
+scope:
+    - README.md
+    - .gitignore
+    - package.json
+    - package-lock.json
+    - next.config.ts
+    - tsconfig.json
+    - postcss.config.mjs
+    - eslint.config.mjs
+    - bash.exe.stackdump
+    - supabase_migration_add_coding_classes.sql
+    - supabase_migration_add_school_phone.sql
+    - supabase_schema.sql
+    - app\actions\admin.ts
+    - app\actions\auth.ts
+    - app\actions\coding-classes.ts
+    - app\actions\registration.ts
+    - app\admin\dashboard\page.tsx
+    - app\admin\page.tsx
+    - app\coding-classes\page.tsx
+    - app\competition\page.tsx
+    - app\favicon.ico
+    - app\globals.css
+    - app\layout.tsx
+    - app\page.tsx
+    - app\verification-success\page.tsx
+    - components\AutoScrollGallery.tsx
+    - components\ContactButton.tsx
+    - components\Header.tsx
+    - components\HeroSlideshow.tsx
+    - components\ImageGrid.tsx
+    - components\ImageWithSkeleton.tsx
+    - components\NewsTicker.tsx
+    - lib\email.ts
+    - lib\images.ts
+    - lib\supabase-admin.ts
+    - lib\supabase.ts
+    - next-env.d.ts
+    - public\ads.txt
+    - public\file.svg
+    - public\globe.svg
+    - public\img\ai&iot\AI-technology-implementation-across-various-industries-in-Nigeria.jpeg
+    - public\img\ai&iot\What Are IoT Devices_ Examples You Need to Know.jpg
+    - public\img\ai&iot\download.jpg
+    - public\img\cctv\CCTV camera 2.jpg
+    - public\img\cctv\Hidden Camera.jpg
+    - public\img\cctv\Hidden camera 5.jpg
+    - public\img\chemistry\10.jpg
+    - public\img\chemistry\16.jpg
+    - public\img\chemistry\19.jpg
+    - public\img\chemistry\HOFFMAN'S APPARATUS 2.jpg
+    - public\img\chemistry\HOFFMAN'S APPARATUS.jpg
+    - public\img\coding.jpg
+    - public\img\coding\481056328_566096009814805_1747030803464332388_n.jpg
+    - public\img\coding\481086261_566092369815169_115578120567062535_n.jpg
+    - public\img\coding\481100617_566096196481453_5974837682614082654_n.jpg
+    - public\img\coding\481225063_576011482156591_2616212100505263572_n.jpg
+    - public\img\coding\481987172_571308965960176_1283977053187486720_n.jpg
+    - public\img\coding\481999579_571310142626725_2558920728025931908_n.jpg
+    - public\img\coding\482065387_571310645960008_8980862044893453523_n.jpg
+    - public\img\coding\482078112_566094126481660_8854460187280783395_n.jpg
+    - public\img\coding\482203220_570548399369566_7534181013850506058_n.jpg
+    - public\img\coding\482204160_566093909815015_1082283081962318000_n.jpg
+    - public\img\coding\482224823_571305639293842_1020700331769111159_n.jpg
+    - public\img\coding\482301168_570550679369338_2683917387419916421_n.jpg
+    - public\img\coding\482302046_571308542626885_5413557890361911478_n.jpg
+    - public\img\coding\482324507_571306519293754_1672756441931037009_n.jpg
+    - public\img\coding\482326361_571309632626776_4359279452295185569_n.jpg
+    - public\img\coding\484808069_576010142156725_8695428498482771119_n.jpg
+    - public\img\coding\496844396_640938558997216_5792065828977035043_n.jpg
+    - public\img\coding\499715830_657144817376590_6283227778719586674_n.jpg
+    - public\img\coding\499862713_646111101813295_35509091073136589_n.jpg
+    - public\img\coding\500530717_634852756272463_3349291255960018135_n.jpg
+    - public\img\coding\503851621_657145520709853_9066120057894248318_n.jpg
+    - public\img\coding\504248419_640939198997152_5564897654196420784_n.jpg
+    - public\img\coding\505512501_646111148479957_9048180311625970045_n.jpg
+    - public\img\coding\513994645_657144110709994_4765494637612782823_n.jpg
+    - public\img\coding\547407421_723839967373741_2953785880868926035_n.jpg
+    - public\img\coding\549037941_723881880702883_8427799593216236208_n.jpg
+    - public\img\coding\557556684_741864818904589_7828152798699893226_n.jpg
+    - public\img\coding\557561548_742127492211655_2202153828060450241_n.jpg
+    - public\img\coding\558885766_741864615571276_1553950906311944213_n.jpg
+    - public\img\coding\559427920_742127572211647_7241858233666707008_n.jpg
+    - public\img\coding\560664374_749241164833621_7799434386227420536_n.jpg
+    - public\img\coding\562422678_749240868166984_5095327142078854437_n.jpg
+    - public\img\coding\564590637_749240974833640_8665951610669988396_n.jpg
+    - public\img\coding\575113620_766433613114376_2546550174336165326_n.jpg
+    - public\img\coding\576422310_766433129781091_430142719870956596_n.jpg
+    - public\img\coding\main\474504654_538136292610777_8818978105747722832_n.jpg
+    - public\img\coding\main\474585909_537277049363368_3176340527668811626_n.jpg
+    - public\img\coding\main\474595269_538137352610671_4557126144147204117_n.jpg
+    - public\img\coding\main\474672735_538136442610762_5932210430182451406_n.jpg
+    - public\img\coding\main\476346032_549178884839851_248901721659693433_n.jpg
+    - public\img\coding\main\476799308_549178761506530_7364173963927254111_n.jpg
+    - public\img\coding\main\479892192_554733807617692_9179122394200556793_n.jpg
+    - public\img\coding\main\481290775_576011162156623_662832491140979998_n.jpg
+    - public\img\coding\main\484510260_576009965490076_8258644953536222440_n.jpg
+    - public\img\coding\main\492656249_640942165663522_8492824890985910257_n.jpg
+    - public\img\coding\main\492697449_640942038996868_5889903915196822501_n.jpg
+    - public\img\coding\main\494422480_640943222330083_5968628206269154241_n.jpg
+    - public\img\coding\main\497890580_646111725146566_6308881392227357297_n.jpg
+    - public\img\coding\main\499715830_657144817376590_6283227778719586674_n.jpg
+    - public\img\coding\main\500438710_640942602330145_2801269930921548248_n.jpg
+    - public\img\coding\main\559205445_747065625051175_6546348677165381858_n.jpg
+    - public\img\coding\main\574033730_766433809781023_5145889311600630074_n.jpg
+    - public\img\cup.png
+    - public\img\cyber security\Ethical-Hacking-and-Cyber-Security-training-in-Abuja-Nigeria.png
+    - public\img\cyber security\download (1).jpg
+    - public\img\cyber security\download.jpg
+    - public\img\data analysis\Ukazka-reportu-v-Power-BI.png
+    - public\img\data analysis\african-american-analyst-checks-financial-balance-works-accounting-min-1024x683.jpg
+    - public\img\data analysis\data-analysis.jpg
+    - public\img\data analysis\e656529d-1dd8-4f5f-896f-610c7bd9b5d6.png
+    - public\img\digital marketing\Modern Digital Marketing Workspace.jpg
+    - public\img\digital marketing\Top Benefits of Digital Marketing for Your Business.jpg
+    - public\img\digital marketing\depositphotos_77280356-stock-photo-digital-marketing.jpg
+    - public\img\drone\1.jpg
+    - public\img\drone\8.jpg
+    - public\img\drone\The Best Drone Cameras Under $500.jpg
+    - public\img\lab\LAB-setup-001.jpg
+    - public\img\lab\LAB-setup-003.jpg
+    - public\img\lab\Where Science Happens! Discover amazing creative ideas and inspiration f_.jpg
+    - public\img\physics\9 V Batteries 3.jpg
+    - public\img\physics\Ammeter 3.jpg
+    - public\img\physics\Chemical Balance 5.jpg
+    - public\img\physics\I C 8.jpg
+    - public\img\physics\I C s 2.jpg
+    - public\img\physics\I C s.jpg
+    - public\img\physics\Microcontroller 2.jpg
+    - public\img\physics\Reistance Box 2.jpg
+    - public\img\physics\Resistor 2.jpg
+    - public\img\physics\Triangular Prism.jpg
+    - public\img\physics\Vernier Calliper 4.jpg
+    - public\img\physics\Wet Battery 4.jpg
+    - public\img\preview.png
+    - public\img\robotics\474515004_538126169278456_7305544527464667353_n.jpg
+    - public\img\robotics\474786984_539557792468627_6350000827779672121_n.jpg
+    - public\img\robotics\474974301_539557979135275_8293317643636603201_n.jpg
+    - public\img\robotics\476160995_573657175725355_8407730784539301770_n.jpg
+    - public\img\robotics\476625698_549821511442255_7335169057159196549_n.jpg
+    - public\img\robotics\477347378_550519928039080_2665349707522705567_n.jpg
+    - public\img\robotics\477785738_552394881184918_3650196858858762088_n.jpg
+    - public\img\robotics\480187896_576413088783097_2567637808596611985_n.jpg
+    - public\img\robotics\480481242_576774272080312_994738738114734436_n.jpg
+    - public\img\robotics\480820036_571384779285928_736965939644035342_n.jpg
+    - public\img\robotics\481292223_570558366035236_4012487883761062702_n.jpg
+    - public\img\robotics\481774205_570551962702543_6174315693931307853_n.jpg
+    - public\img\robotics\481902300_570557359368670_281283022629174804_n.jpg
+    - public\img\robotics\481975780_570551576035915_1641015953925108576_n.jpg
+    - public\img\robotics\482031904_576412362116503_7966186067332492901_n.jpg
+    - public\img\robotics\482206496_570548852702854_7266062334523075837_n.jpg
+    - public\img\robotics\482273480_570557586035314_5652588378501022696_n.jpg
+    - public\img\robotics\482301658_570550602702679_2006972752155136_n.jpg
+    - public\img\robotics\482985233_570558169368589_8224340171646976782_n.jpg
+    - public\img\robotics\482988097_576412772116462_7144088818132584253_n.jpg
+    - public\img\robotics\483064733_576411445449928_6869903376762889016_n.jpg
+    - public\img\robotics\483100592_570558089368597_2394090391412249647_n.jpg
+    - public\img\robotics\483101242_576779015413171_6086057048176640119_n.jpg
+    - public\img\robotics\483107898_570558452701894_1082456886708712129_n.jpg
+    - public\img\robotics\483480325_573656602392079_3057560687187077939_n.jpg
+    - public\img\robotics\483522942_576774642080275_704341741069191949_n.jpg
+    - public\img\robotics\483526016_573656655725407_6900940824346684595_n.jpg
+    - public\img\robotics\483839298_571309592626780_3900554603704755583_n.jpg
+    - public\img\robotics\483950605_576413765449696_329448845615490447_n.jpg
+    - public\img\robotics\483975370_573656419058764_8380244533609241967_n.jpg
+    - public\img\robotics\484016667_573656545725418_207680331590800005_n.jpg
+    - public\img\robotics\484052161_576411715449901_7706342637451034846_n.jpg
+    - public\img\robotics\484096769_576412225449850_3317571429838091352_n.jpg
+    - public\img\robotics\484105306_573656732392066_52604630339922116_n.jpg
+    - public\img\robotics\484146092_576412978783108_9050836144097728226_n.jpg
+    - public\img\robotics\484147817_576777568746649_368020912245378708_n.jpg
+    - public\img\robotics\484151475_576412688783137_6013080457373907553_n.jpg
+    - public\img\robotics\484252848_576415365449536_4775356569294872170_n.jpg
+    - public\img\robotics\484297518_576414808782925_1766920217103433765_n.jpg
+    - public\img\robotics\484323053_576779805413092_6572932706385560705_n.jpg
+    - public\img\robotics\484334630_576413218783084_4482824693866058777_n.jpg
+    - public\img\robotics\484353438_576413668783039_462818937010604520_n.jpg
+    - public\img\robotics\484377114_576778822079857_1768643671948392764_n.jpg
+    - public\img\robotics\484447984_576775482080191_6946951545897945705_n.jpg
+    - public\img\robotics\484512067_576777662079973_1413953359985142476_n.jpg
+    - public\img\robotics\484570202_576412142116525_2637788868399275099_n.jpg
+    - public\img\robotics\484870322_576778545413218_7037939063086224637_n.jpg
+    - public\img\robotics\484903769_576779642079775_4402984262514911267_n.jpg
+    - public\img\robotics\486630608_587102257714180_8237975999340994085_n.jpg
+    - public\img\robotics\486675172_587101964380876_4423391418945837053_n.jpg
+    - public\img\robotics\486690718_587102144380858_397330670906057761_n.jpg
+    - public\img\robotics\486705721_587102767714129_5922065259733853863_n.jpg
+    - public\img\robotics\486801648_587102981047441_2905663137121819933_n.jpg
+    - public\img\robotics\487052056_587102581047481_312977517997122225_n.jpg
+    - public\img\robotics\487124045_587102881047451_6779433033967199939_n.jpg
+    - public\img\robotics\487204448_587103041047435_6620849228967846058_n.jpg
+    - public\img\robotics\487208027_587102521047487_9070989322691693180_n.jpg
+    - public\img\robotics\487314364_587102034380869_2253305879261785725_n.jpg
+    - public\img\robotics\487440483_587102467714159_3585117045216329692_n.jpg
+    - public\img\robotics\487683327_607538475670558_6886534099386335895_n.jpg
+    - public\img\robotics\491965791_607538825670523_2036020855314849796_n.jpg
+    - public\img\robotics\492736640_640943745663364_6961314407974082948_n.jpg
+    - public\img\robotics\492747103_640937812330624_8833927032805492598_n.jpg
+    - public\img\robotics\492751684_636362699454802_8347285061336084397_n.jpg
+    - public\img\robotics\492818010_636363752788030_8637930614532994793_n.jpg
+    - public\img\robotics\493028076_636363392788066_4457300987008151005_n.jpg
+    - public\img\robotics\493679073_631004016657337_410109499076134225_n.jpg
+    - public\img\robotics\493683650_640943472330058_8655274495324171503_n.jpg
+    - public\img\robotics\493951318_640942538996818_3880094317934998167_n.jpg
+    - public\img\robotics\494253321_640942485663490_1468444055737947673_n.jpg
+    - public\img\robotics\494640026_640942378996834_2501100994432531836_n.jpg
+    - public\img\robotics\494707398_640944162329989_3175758884990073932_n.jpg
+    - public\img\robotics\494732745_640944365663302_6350851691740898549_n.jpg
+    - public\img\robotics\494930723_640942962330109_2644896350453252314_n.jpg
+    - public\img\robotics\495025384_640941418996930_7962248862574609312_n.jpg
+    - public\img\robotics\497018719_640942198996852_8137479035508791940_n.jpg
+    - public\img\robotics\497758533_640943775663361_815438463201664127_n.jpg
+    - public\img\robotics\497844040_636363236121415_8646560582962595437_n.jpg
+    - public\img\robotics\498159040_640944198996652_6941793090350386772_n.jpg
+    - public\img\robotics\498176479_631004606657278_1423535605860572695_n.jpg
+    - public\img\robotics\499488840_640941812330224_547420907000862559_n.jpg
+    - public\img\robotics\499668114_631004676657271_4292221645481225806_n.jpg
+    - public\img\robotics\499847889_640943262330079_5256115971863684149_n.jpg
+    - public\img\robotics\499860825_640942622330143_281449651882856914_n.jpg
+    - public\img\robotics\499922076_631004539990618_3947683803953225858_n.jpg
+    - public\img\robotics\500464602_640944462329959_557124110077158631_n.jpg
+    - public\img\robotics\501045803_640937682330637_1182315221268164454_n.jpg
+    - public\img\robotics\503413558_640937058997366_1758437287375575444_n.jpg
+    - public\img\robotics\503475222_640943798996692_572521551668039639_n.jpg
+    - public\img\robotics\503743594_640943995663339_7358867714532981640_n.jpg
+    - public\img\robotics\504000694_658329363924802_5257380084621483695_n.jpg
+    - public\img\robotics\504247707_640938035663935_4518982599944545258_n.jpg
+    - public\img\robotics\506106637_664243056666766_6418150206150398802_n.jpg
+    - public\img\robotics\508471351_650697898021282_7313001099657721139_n.jpg
+    - public\img\robotics\513497900_658329147258157_2347280184399894818_n.jpg
+    - public\img\robotics\513535840_657145664043172_8408210870661122052_n.jpg
+    - public\img\robotics\513929742_657144970709908_3158556922344247759_n.jpg
+    - public\img\robotics\514279767_661412990283106_7877584292811976533_n.jpg
+    - public\img\robotics\514413769_664242646666807_4907376603076598572_n.jpg
+    - public\img\robotics\516373119_664242836666788_7777596470870886791_n.jpg
+    - public\img\robotics\547764771_723835854040819_8347952527136056452_n.jpg
+    - public\img\robotics\548116395_723837977373940_8615513978772675867_n.jpg
+    - public\img\robotics\549923593_723835920707479_6948816265318411334_n.jpg
+    - public\img\robotics\551112527_753542647736806_1004045041334686620_n.jpg
+    - public\img\robotics\556680827_741865275571210_6344327798610636728_n.jpg
+    - public\img\robotics\557537177_741863445571393_5775184361019621612_n.jpg
+    - public\img\robotics\557690343_741865385571199_2597869801463520394_n.jpg
+    - public\img\robotics\557701158_741863338904737_6040987501950635651_n.jpg
+    - public\img\robotics\557808810_741862898904781_3514124827657900_n.jpg
+    - public\img\robotics\558656041_741865485571189_49114173848623103_n.jpg
+    - public\img\robotics\558756511_741864485571289_1787684044470139224_n.jpg
+    - public\img\robotics\558919155_741863188904752_5273257229259981966_n.jpg
+    - public\img\robotics\559552909_741866182237786_3532155204610759207_n.jpg
+    - public\img\robotics\559895269_741863038904767_5141866239752882710_n.jpg
+    - public\img\robotics\561256223_741863825571355_2569190171195507888_n.jpg
+    - public\img\robotics\565137323_753542014403536_7336406350667235759_n.jpg
+    - public\img\robotics\565380136_749243478166723_2055746882621511210_n.jpg
+    - public\img\robotics\566249896_753376291086775_2710349827985435677_n.jpg
+    - public\img\robotics\574345825_766438186447252_8644735633364694537_n.jpg
+    - public\img\robotics\574401586_766434619780942_1350472092175160167_n.jpg
+    - public\img\robotics\574940084_766438089780595_4335789287325391172_n.jpg
+    - public\img\robotics\576849049_766438929780511_1012976109741534064_n.jpg
+    - public\img\robotics\576907137_766439186447152_1542017692735944319_n.jpg
+    - public\img\robotics\577069442_766435589780845_5927165819492572472_n.jpg
+    - public\img\robotics\577249658_766438799780524_2576278404065635261_n.jpg
+    - public\img\robotics\577634048_766434196447651_8275109180334695162_n.jpg
+    - public\img\robotics\577892121_766434029781001_8020039948582074630_n.jpg
+    - public\img\robotics\579864548_772988362458901_1860338972856886597_n.jpg
+    - public\img\robotics\583310982_772993192458418_4837273409067313130_n.jpg
+    - public\img\robotics\main\472057820_520573141033759_1321005910860455936_n.jpg
+    - public\img\robotics\main\473315757_529827850108288_608465748028544196_n.jpg
+    - public\img\robotics\main\474746757_538990202525386_144460918846561314_n.jpg
+    - public\img\robotics\main\484052245_576779292079810_8702066581167763531_n.jpg
+    - public\img\robotics\main\486128860_598553629902376_8562904275956054488_n.jpg
+    - public\img\robotics\main\486354303_598553286569077_8156294249896759758_n.jpg
+    - public\img\robotics\main\486552921_598553446569061_2734150934637484651_n.jpg
+    - public\img\robotics\main\487077862_587101734380899_660849974303456152_n.jpg
+    - public\img\robotics\main\487119698_587101781047561_4937875586518796082_n.jpg
+    - public\img\robotics\main\487204312_587101427714263_7586501321288565815_n.jpg
+    - public\img\robotics\main\487216418_598550973235975_8520289497039609297_n.jpg
+    - public\img\robotics\main\487218360_587101844380888_1835995762481089496_n.jpg
+    - public\img\robotics\main\487376724_587104421047297_2095452217943457599_n.jpg
+    - public\img\robotics\main\488661493_598551423235930_9220412850253106109_n.jpg
+    - public\img\robotics\main\491662322_607538732337199_7811976326228854735_n.jpg
+    - public\img\robotics\main\495452162_636362729454799_7242831846413127361_n.jpg
+    - public\img\robotics\main\495659949_636363039454768_9218000220563387735_n.jpg
+    - public\img\robotics\main\496023101_636363156121423_551374846983660452_n.jpg
+    - public\img\robotics\main\513797985_661412810283124_5085034323302626284_n.jpg
+    - public\img\robotics\main\516447140_668212046269867_4796824540413693337_n.jpg
+    - public\img\robotics\main\565809524_753543157736755_6848789712465195131_n.jpg
+    - public\img\robotics\main\574345018_766438273113910_5795863664596333684_n.jpg
+    - public\img\robotics\main\577602626_766435216447549_1448870593405716798_n.jpg
+    - public\img\robotics\main\580350601_772990535792017_6191513482088821260_n.jpg
+    - public\img\robotics\main\580495065_772991359125268_6454942510958331035_n.jpg
+    - public\img\robotics\main\580614504_772991669125237_2128118991293274620_n.jpg
+    - public\img\robotics\main\581931804_772988439125560_794793785865144975_n.jpg
+    - public\img\software development\IMG-20240917-WA0008.jpg
+    - public\img\software development\Screenshot 2026-03-05 023431.png
+    - public\img\software development\sidebyside.png
+    - public\img\staff\admin.jpg
+    - public\img\staff\fred.jpeg
+    - public\img\staff\instructor.jpg
+    - public\img\staff\onyekachi.jpeg
+    - public\img\staff\remote software engineer.jpg
+    - public\logo.png
+    - public\next.svg
+    - public\vercel.svg
+    - public\window.svg
+    - tsconfig.tsbuildinfo
+    - types\supabase.ts
+source_files: []
+depends_on: []
+related_to: []

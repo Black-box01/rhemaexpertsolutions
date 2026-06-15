@@ -1,0 +1,3 @@
+- Server Actions are consistently marked with 'use server' and implement explicit authentication checks (via checkAuth) or error handling blocks that return standardized { success, error } objects.
+- Dynamic content rendering follows a fallback pattern where data is fetched from Supabase, but static hardcoded arrays are used as a backup if the database connection fails or returns empty results.
+- Database interactions in admin actions utilize a centralized supabaseAdmin client instance to perform mutations, ensuring consistent use of elevated privileges for dashboard operations.

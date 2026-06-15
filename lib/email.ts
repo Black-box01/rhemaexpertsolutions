@@ -131,3 +131,61 @@ export async function sendCodingClassRegistrationEmail(registration: {
     html,
   });
 }
+
+export async function sendENoteNotificationEmail(note: {
+  title: string;
+  content?: string;
+  author: string;
+  category?: string;
+  priority?: string;
+  tags?: string[];
+  file_urls?: string[];
+}) {
+  const categoryLabels: Record<string, string> = {
+    general: 'General',
+    student: 'Student',
+    admin: 'Admin',
+    urgent: 'Urgent',
+    announcement: 'Announcement',
+  };
+
+  const priorityLabels: Record<string, string> = {
+    low: 'Low',
+    normal: 'Normal',
+    high: 'High',
+    urgent: 'Urgent',
+  };
+
+  const tagsList = note.tags && note.tags.length > 0 
+    ? note.tags.map(tag => `<span style="background: #e5e7eb; padding: 2px 8px; border-radius: 4px; margin-right: 4px; font-size: 12px;">${tag}</span>`).join('')
+    : 'None';
+
+  const attachmentsList = note.file_urls && note.file_urls.length > 0
+    ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151; vertical-align: top;">Attachments:</td><td style="padding: 8px;"><ul style="margin: 0; padding-left: 20px;">${note.file_urls.map((url, idx) => `<li><a href="${url}" style="color: #2563eb;">File ${idx + 1}</a></li>`).join('')}</ul></td></tr>`
+    : '';
+
+  const html = `
+    <h2 style="color: #1e3a8a;">📝 New Staff E-Note Published</h2>
+    <p>A new e-note has been created by <strong>${note.author}</strong>.</p>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <table style="border-collapse: collapse; width: 100%; font-size: 14px;">
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151; width: 150px;">Title:</td><td style="padding: 8px;"><strong style="color: #1e3a8a; font-size: 16px;">${note.title}</strong></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Author:</td><td style="padding: 8px;">${note.author}</td></tr>
+      ${note.category ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151;">Category:</td><td style="padding: 8px;"><span style="background: ${note.category === 'urgent' ? '#fee2e2; color: #991b1b;' : note.category === 'announcement' ? '#f3e8ff; color: #7c3aed;' : '#dcfce7; color: #166534;'}; padding: 4px 12px; border-radius: 4px; font-weight: 600;">${categoryLabels[note.category] || note.category}</span></td></tr>` : ''}
+      ${note.priority ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151;">Priority:</td><td style="padding: 8px;"><span style="background: ${note.priority === 'urgent' ? '#fee2e2; color: #991b1b;' : note.priority === 'high' ? '#ffedd5; color: #9a3412;' : '#dbeafe; color: #1e40af;'}; padding: 4px 12px; border-radius: 4px; font-weight: 600;">${priorityLabels[note.priority] || note.priority}</span></td></tr>` : ''}
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Tags:</td><td style="padding: 8px;">${tagsList}</td></tr>
+      ${note.content ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151; vertical-align: top;">Content:</td><td style="padding: 8px;"><div style="background: #f9fafb; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; white-space: pre-wrap;">${note.content}</div></td></tr>` : ''}
+      ${attachmentsList}
+    </table>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <p style="margin-top: 20px;"><a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/dashboard" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">View in Dashboard</a></p>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <p style="font-size: 12px; color: #6b7280;">This is an automated notification from Rhema Expert Solutions E-Note System.</p>
+  `;
+
+  return sendEmail({
+    to: ADMIN_EMAILS,
+    subject: `📝 New E-Note: ${note.title}`,
+    html,
+  });
+}
