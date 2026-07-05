@@ -1,0 +1,6 @@
+- Server actions are declared with a `'use server'` directive at the top of each file and return a `{ success, error? }` object rather than throwing.
+- Every mutating server action begins by calling `checkAuth()` (or `ensureAuthenticated()` which wraps it) and returns `{ success: false, error: 'Unauthorized' }` when unauthenticated.
+- After a successful write, server actions call `revalidatePath('/admin/dashboard')` so the dashboard reflects changes without a full reload.
+- Supabase queries chain `.order(...)` then optional `.eq(...)` / `.or(...)` filters, and use `.range(from, to)` for server-side pagination with a parallel `.select('*', { count: 'exact' })` for total counts.
+- File uploads go through a server action that generates a unique path `${Date.now()}-${random}.${ext}` under `attachments/` in the `staff-notes` storage bucket and returns the public URL.
+- Client components that need auth guard their entry point with a `useEffect` calling `checkAuth()` and `router.push('/admin')` on failure.

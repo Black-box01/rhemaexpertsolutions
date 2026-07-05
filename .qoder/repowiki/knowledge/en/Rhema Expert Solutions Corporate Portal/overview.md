@@ -1,1 +1,0 @@
-A Next.js corporate website and admin platform for a Nigerian technology firm, featuring service showcases, student registration systems, and dynamic content management via Supabase.

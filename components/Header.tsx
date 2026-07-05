@@ -6,6 +6,7 @@ import ImageWithSkeleton from './ImageWithSkeleton';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTrainingDropdownOpen, setIsTrainingDropdownOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -13,6 +14,11 @@ export default function Header() {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+    setIsTrainingDropdownOpen(false);
+  };
+
+  const toggleTrainingDropdown = () => {
+    setIsTrainingDropdownOpen(!isTrainingDropdownOpen);
   };
 
   return (
@@ -37,7 +43,39 @@ export default function Header() {
             <li><a href="#about" className="text-blue-900 hover:text-red-600 transition-colors">About</a></li>
             <li><a href="#services" className="text-blue-900 hover:text-red-600 transition-colors">Services</a></li>
             <li><a href="#projects" className="text-blue-900 hover:text-red-600 transition-colors">Projects</a></li>
-            <li><a href="/coding-classes" className="text-blue-900 hover:text-red-600 transition-colors font-semibold">Coding Classes</a></li>
+            
+            {/* Training Dropdown */}
+            <li 
+              className="relative group"
+              onMouseEnter={() => setIsTrainingDropdownOpen(true)}
+              onMouseLeave={() => setIsTrainingDropdownOpen(false)}
+            >
+              <button className="text-blue-900 hover:text-red-600 transition-colors font-semibold flex items-center">
+                Trainings
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className={`absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50 transition-all duration-200 ${isTrainingDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+                <a 
+                  href="/coding-classes" 
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <div className="font-semibold">Coding Classes</div>
+                  <div className="text-xs text-gray-500 mt-1">For students: Scratch, Python, HTML/CSS/JS, Roblox, React & more</div>
+                </a>
+                <a 
+                  href="/professional-trainings" 
+                  className="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                >
+                  <div className="font-semibold">Professional Trainings</div>
+                  <div className="text-xs text-gray-500 mt-1">AI, Machine Learning, Power BI, Data Science, Cyber Security & IoT</div>
+                </a>
+              </div>
+            </li>
+            
             <li><a href="#competitions" className="text-red-600 hover:text-blue-900 transition-colors animate-pulse">Competitions</a></li>
             <li className="ml-auto"><a href="#contact" className="text-blue-900 hover:text-red-600 transition-colors">Contact</a></li>
             <li>
@@ -104,7 +142,20 @@ export default function Header() {
           <a href="#about" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">About</a>
           <a href="#services" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Services</a>
           <a href="#projects" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Projects</a>
-          <a href="/coding-classes" onClick={closeMenu} className="text-lg font-medium text-blue-900 hover:text-blue-600 border-b border-gray-50 pb-2">Coding Classes</a>
+          
+          {/* Training Section in Mobile */}
+          <div className="border-b border-gray-50 pb-2">
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Training Programs</p>
+            <a href="/coding-classes" onClick={closeMenu} className="block text-lg font-medium text-blue-900 hover:text-blue-600 pl-4 py-1 border-l-2 border-blue-200 ml-2">
+              Coding Classes
+              <span className="block text-xs text-gray-500 mt-1">For students</span>
+            </a>
+            <a href="/professional-trainings" onClick={closeMenu} className="block text-lg font-medium text-purple-600 hover:text-purple-800 pl-4 py-1 border-l-2 border-purple-200 ml-2 mt-2">
+              Professional Trainings
+              <span className="block text-xs text-gray-500 mt-1">AI, Data Science, Cyber Security & more</span>
+            </a>
+          </div>
+          
           <a href="#competitions" onClick={closeMenu} className="text-lg font-medium text-red-600 hover:text-blue-900 border-b border-gray-50 pb-2">Competitions</a>
           <hr className="my-2 border-gray-200" />
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Connect</p>

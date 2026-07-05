@@ -271,21 +271,25 @@ export default async function Home() {
       <section id="training" className="py-16 bg-white/70 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-900 mb-4 drop-shadow-sm">Online Trainings for Students</h2>
+            <h2 className="text-3xl font-bold text-blue-900 mb-4 drop-shadow-sm">Online Trainings & Professional Development</h2>
             <div className="w-20 h-1 bg-gradient-to-r from-red-600 to-red-400 mx-auto rounded-full"></div>
             <p className="text-gray-700 mt-4 max-w-3xl mx-auto">
-              We offer structured online classes that help students build strong digital skills in coding and STEM, with guided lessons and practical projects.
+              We offer structured online classes for students and comprehensive professional training programs to advance your career in technology.
             </p>
           </div>
 
           <div className="flex flex-col lg:flex-row items-start gap-10">
             <div className="w-full lg:w-1/2">
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-                <h3 className="text-xl font-bold text-blue-900 mb-3">What Students Learn</h3>
+                <h3 className="text-xl font-bold text-blue-900 mb-3">What You'll Learn</h3>
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start">
                     <span className="text-red-600 mr-2">•</span>
-                    <span>Foundation to advanced programming concepts with hands-on practice.</span>
+                    <span><strong>For Students:</strong> Foundation to advanced programming concepts with hands-on practice.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
+                    <span><strong>For Professionals:</strong> Advanced skills in AI, Data Science, Cyber Security, and more.</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-600 mr-2">•</span>
@@ -311,6 +315,12 @@ export default async function Home() {
                     className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md font-bold text-center"
                   >
                     Register for Coding Classes
+                  </a>
+                  <a
+                    href="/professional-trainings"
+                    className="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all shadow-md font-bold text-center"
+                  >
+                    Professional Trainings
                   </a>
                 </div>
               </div>

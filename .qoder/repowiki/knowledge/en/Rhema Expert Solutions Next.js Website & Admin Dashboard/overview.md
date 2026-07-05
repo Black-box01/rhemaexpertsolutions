@@ -1,0 +1,1 @@
+Next.js 16 marketing site for Rhema Expert Solutions with a password-protected admin dashboard and e-note system backed by Supabase.

@@ -1,7 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { sendCompetitionRegistrationEmail } from '@/lib/email';
+import { sendCompetitionRegistrationEmail, sendProfessionalTrainingRegistrationEmail } from '@/lib/email';
 
 type RegistrationInput = {
   full_name: string;
@@ -118,6 +118,128 @@ export async function deleteCompetitionRegistration(id: string) {
   try {
     const { error } = await supabaseAdmin
       .from('rhema_registrations')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
+
+type ProfessionalTrainingInput = {
+  full_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth?: string;
+  organization?: string;
+  job_title?: string;
+  training_program: string;
+  preferred_schedule: string;
+  experience_level: string;
+  payment_preference: string;
+  additional_info?: string;
+};
+
+export async function submitProfessionalTrainingRegistration(formData: ProfessionalTrainingInput) {
+  try {
+    const { 
+      full_name, 
+      email, 
+      phone, 
+      gender, 
+      date_of_birth, 
+      organization, 
+      job_title, 
+      training_program, 
+      preferred_schedule, 
+      experience_level, 
+      payment_preference, 
+      additional_info 
+    } = formData;
+
+    // Validate required fields
+    if (!full_name || !email || !phone || !gender || !training_program || !preferred_schedule || !experience_level || !payment_preference) {
+      return { success: false, error: 'Please fill in all required fields.' };
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('rhema_professional_trainings')
+      .insert([
+        {
+          full_name,
+          email,
+          phone,
+          gender,
+          date_of_birth: date_of_birth || null,
+          organization,
+          job_title,
+          training_program,
+          preferred_schedule,
+          experience_level,
+          payment_preference,
+          additional_info,
+          status: 'pending'
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Professional Training Registration Error:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Send email notification to admins
+    const emailResult = await sendProfessionalTrainingRegistrationEmail(formData);
+    if (!emailResult.success) {
+      console.warn('Failed to send professional training registration email:', emailResult.error);
+    }
+
+    return { success: true, data };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    console.error('Unexpected Professional Training Registration Error:', error);
+    return { success: false, error: message };
+  }
+}
+
+export async function fetchProfessionalTrainings() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('rhema_professional_trainings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
+
+export async function updateProfessionalTraining(id: string, data: Partial<ProfessionalTrainingInput> & { status?: string }) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('rhema_professional_trainings')
+      .update(data)
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: message };
+  }
+}
+
+export async function deleteProfessionalTraining(id: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('rhema_professional_trainings')
       .delete()
       .eq('id', id);
 

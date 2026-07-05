@@ -1,3 +1,0 @@
-- **Backend-as-a-Service**: Supabase (PostgreSQL) with Row Level Security (RLS) bypassed via Service Role Key for server-side admin actions.
-- **Email Service**: Nodemailer configured with Gmail SMTP for sending registration notifications to administrators.
-- **Styling**: Tailwind CSS v4 with PostCSS integration.

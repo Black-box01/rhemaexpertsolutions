@@ -189,3 +189,48 @@ export async function sendENoteNotificationEmail(note: {
     html,
   });
 }
+
+export async function sendProfessionalTrainingRegistrationEmail(data: {
+  full_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth?: string;
+  organization?: string;
+  job_title?: string;
+  training_program: string;
+  preferred_schedule: string;
+  experience_level: string;
+  payment_preference: string;
+  additional_info?: string;
+}) {
+  const html = `
+    <h2 style="color: #7c3aed;">🎓 New Professional Training Registration</h2>
+    <p>A new participant has registered for professional training.</p>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <table style="border-collapse: collapse; width: 100%; font-size: 14px;">
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151; width: 180px;">Full Name:</td><td style="padding: 8px;"><strong style="color: #7c3aed; font-size: 16px;">${data.full_name}</strong></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Email:</td><td style="padding: 8px;"><a href="mailto:${data.email}" style="color: #2563eb;">${data.email}</a></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Phone:</td><td style="padding: 8px;"><a href="tel:${data.phone}" style="color: #2563eb;">${data.phone}</a></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Gender:</td><td style="padding: 8px;">${data.gender}</td></tr>
+      ${data.date_of_birth ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151;">Date of Birth:</td><td style="padding: 8px;">${data.date_of_birth}</td></tr>` : ''}
+      ${data.organization ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151;">Organization:</td><td style="padding: 8px;">${data.organization}</td></tr>` : ''}
+      ${data.job_title ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151;">Job Title:</td><td style="padding: 8px;">${data.job_title}</td></tr>` : ''}
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Training Program:</td><td style="padding: 8px;"><span style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 4px; font-weight: 600;">${data.training_program}</span></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Preferred Schedule:</td><td style="padding: 8px;">${data.preferred_schedule}</td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Experience Level:</td><td style="padding: 8px;"><span style="background: ${data.experience_level === 'Beginner' ? '#dcfce7; color: #166534;' : data.experience_level === 'Intermediate' ? '#dbeafe; color: #1e40af;' : '#f3e8ff; color: #7c3aed;'}; padding: 4px 12px; border-radius: 4px; font-weight: 600;">${data.experience_level}</span></td></tr>
+      <tr><td style="padding: 8px; font-weight: bold; color: #374151;">Payment Preference:</td><td style="padding: 8px;"><span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 4px; font-weight: 600;">${data.payment_preference}</span></td></tr>
+      ${data.additional_info ? `<tr><td style="padding: 8px; font-weight: bold; color: #374151; vertical-align: top;">Additional Info:</td><td style="padding: 8px;"><div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #7c3aed; white-space: pre-wrap;">${data.additional_info}</div></td></tr>` : ''}
+    </table>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <p style="margin-top: 20px;"><a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/dashboard" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">View in Dashboard</a></p>
+    <hr style="border: 1px solid #e5e7eb; margin: 16px 0;" />
+    <p style="font-size: 12px; color: #6b7280;">This is an automated notification from Rhema Expert Solutions Professional Training System.</p>
+  `;
+
+  return sendEmail({
+    to: ADMIN_EMAILS,
+    subject: `🎓 New Professional Training Registration: ${data.full_name} - ${data.training_program}`,
+    html,
+  });
+}

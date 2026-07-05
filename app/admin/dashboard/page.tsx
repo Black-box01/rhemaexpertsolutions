@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration, RhemaStaffNote } from '@/types/supabase';
+import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration, RhemaStaffNote, RhemaProfessionalTraining } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
 import { saveService, saveClient, saveTeam, saveCompetition, saveNewsletter, saveSetting, deleteItem, toggleCompetition, fetchDashboardData } from '@/app/actions/admin';
 import { fetchRegistrations, updateCompetitionRegistration, deleteCompetitionRegistration } from '@/app/actions/registration';
 import { fetchCodingClassRegistrations, updateCodingClassStatus, updateCodingClassRegistration, deleteCodingClassRegistration } from '@/app/actions/coding-classes';
 import { fetchStaffNotes, saveStaffNote, deleteStaffNote, uploadNoteFile, NoteInput } from '@/app/actions/notes';
+import { fetchProfessionalTrainings, updateProfessionalTraining, deleteProfessionalTraining } from '@/app/actions/registration';
 
-type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes' | 'staff-notes';
+type AdminTab = 'services' | 'clients' | 'team' | 'competitions' | 'newsletter' | 'settings' | 'registrations' | 'coding-classes' | 'staff-notes' | 'professional-trainings';
 
 type FormState = {
   [key: string]: unknown;
@@ -38,9 +39,9 @@ export default function AdminDashboard() {
   
   // Registration detail modal state
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
-  const [selectedRegistration, setSelectedRegistration] = useState<RhemaRegistration | RhemaCodingClassRegistration | null>(null);
+  const [selectedRegistration, setSelectedRegistration] = useState<RhemaRegistration | RhemaCodingClassRegistration | RhemaProfessionalTraining | null>(null);
   const [isEditingReg, setIsEditingReg] = useState(false);
-  const [regFormData, setRegFormData] = useState<Partial<RhemaRegistration & RhemaCodingClassRegistration>>({});
+  const [regFormData, setRegFormData] = useState<Partial<RhemaRegistration & RhemaCodingClassRegistration & RhemaProfessionalTraining>>({});
 
   // Data states
   const [services, setServices] = useState<RhemaService[]>([]);
@@ -52,6 +53,7 @@ export default function AdminDashboard() {
   const [registrations, setRegistrations] = useState<RhemaRegistration[]>([]);
   const [codingClassRegistrations, setCodingClassRegistrations] = useState<RhemaCodingClassRegistration[]>([]);
   const [staffNotes, setStaffNotes] = useState<RhemaStaffNote[]>([]);
+  const [professionalTrainings, setProfessionalTrainings] = useState<RhemaProfessionalTraining[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesPage, setNotesPage] = useState(1);
   const [notesTotal, setNotesTotal] = useState(0);
@@ -82,7 +84,17 @@ export default function AdminDashboard() {
     if (activeTab === 'staff-notes') {
       fetchNotes();
     }
+    if (activeTab === 'professional-trainings') {
+      fetchProfessionalTrainingsData();
+    }
   }, [activeTab, notesPage, notesSearch, notesFilterStatus, notesFilterCategory, notesFilterPriority]);
+
+  const fetchProfessionalTrainingsData = async () => {
+    const result = await fetchProfessionalTrainings();
+    if (result.success) {
+      setProfessionalTrainings(result.data as RhemaProfessionalTraining[]);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -670,7 +682,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {isEditingReg ? 'Edit' : 'View'} Registration - {'courses' in selectedRegistration ? 'Coding Class' : 'Competition'}
+                {isEditingReg ? 'Edit' : 'View'} Registration - {'courses' in selectedRegistration ? 'Coding Class' : 'training_program' in selectedRegistration ? 'Professional Training' : 'Competition'}
               </h3>
               <button onClick={closeRegModal} className="text-gray-500 hover:text-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -783,6 +795,87 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                 </>
+              ) : 'training_program' in selectedRegistration ? (
+                // Professional Training Registration
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <p className="text-gray-900 font-medium">{selectedRegistration.full_name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <p className="text-gray-700">{selectedRegistration.email}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <p className="text-gray-700">{selectedRegistration.phone}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                      <p className="text-gray-700">{selectedRegistration.gender}</p>
+                    </div>
+                  </div>
+                  {selectedRegistration.date_of_birth && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                      <p className="text-gray-700">{new Date(selectedRegistration.date_of_birth).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  {selectedRegistration.organization && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                      <p className="text-gray-700">{selectedRegistration.organization}</p>
+                    </div>
+                  )}
+                  {selectedRegistration.job_title && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                      <p className="text-gray-700">{selectedRegistration.job_title}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Training Program</label>
+                      <span className="inline-block bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">{selectedRegistration.training_program}</span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Schedule</label>
+                      <p className="text-gray-700">{selectedRegistration.preferred_schedule}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                        selectedRegistration.experience_level === 'Beginner' ? 'bg-green-100 text-green-800' :
+                        selectedRegistration.experience_level === 'Intermediate' ? 'bg-blue-100 text-blue-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>{selectedRegistration.experience_level}</span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Preference</label>
+                      <span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">{selectedRegistration.payment_preference}</span>
+                    </div>
+                  </div>
+                  {selectedRegistration.additional_info && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Additional Information</label>
+                      <p className="text-gray-700 whitespace-pre-wrap">{selectedRegistration.additional_info}</p>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" value={regFormData.status || selectedRegistration.status} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                      <option value="pending">Pending</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="enrolled">Enrolled</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </>
               ) : (
                 // Competition Registration
                 <>
@@ -792,7 +885,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="text" name="full_name" value={regFormData.full_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-900 font-medium">{selectedRegistration.full_name}</p>
+                        <p className="text-gray-900 font-medium">{(selectedRegistration as RhemaRegistration).full_name}</p>
                       )}
                     </div>
                     <div>
@@ -803,7 +896,7 @@ export default function AdminDashboard() {
                           <option value="Female">Female</option>
                         </select>
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.gender}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).gender}</p>
                       )}
                     </div>
                   </div>
@@ -813,7 +906,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="number" name="age" value={regFormData.age || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.age}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).age}</p>
                       )}
                     </div>
                     <div>
@@ -821,7 +914,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="date" name="date_of_birth" value={regFormData.date_of_birth || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.date_of_birth || 'Not provided'}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).date_of_birth || 'Not provided'}</p>
                       )}
                     </div>
                   </div>
@@ -830,7 +923,7 @@ export default function AdminDashboard() {
                     {isEditingReg ? (
                       <input type="text" name="school_name" value={regFormData.school_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                     ) : (
-                      <p className="text-gray-900 font-medium">{selectedRegistration.school_name}</p>
+                      <p className="text-gray-900 font-medium">{(selectedRegistration as RhemaRegistration).school_name}</p>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -839,7 +932,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="text" name="class_level" value={regFormData.class_level || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.class_level}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).class_level}</p>
                       )}
                     </div>
                     <div>
@@ -850,7 +943,7 @@ export default function AdminDashboard() {
                           <option value="UPPER PRIMARY">Upper Primary</option>
                         </select>
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.category}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).category}</p>
                       )}
                     </div>
                   </div>
@@ -860,7 +953,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="text" name="parent_name" value={regFormData.parent_name || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.parent_name}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).parent_name}</p>
                       )}
                     </div>
                     <div>
@@ -868,7 +961,7 @@ export default function AdminDashboard() {
                       {isEditingReg ? (
                         <input type="tel" name="parent_phone" value={regFormData.parent_phone || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                       ) : (
-                        <p className="text-gray-700">{selectedRegistration.parent_phone}</p>
+                        <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).parent_phone}</p>
                       )}
                     </div>
                   </div>
@@ -877,12 +970,12 @@ export default function AdminDashboard() {
                     {isEditingReg ? (
                       <input type="email" name="parent_email" value={regFormData.parent_email || ''} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900" />
                     ) : (
-                      <p className="text-gray-700">{selectedRegistration.parent_email || 'Not provided'}</p>
+                      <p className="text-gray-700">{(selectedRegistration as RhemaRegistration).parent_email || 'Not provided'}</p>
                     )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select name="status" value={regFormData.status || selectedRegistration.status} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
+                    <select name="status" value={regFormData.status || (selectedRegistration as RhemaRegistration).status} onChange={handleRegInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900">
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
                       <option value="rejected">Rejected</option>
@@ -1196,6 +1289,7 @@ export default function AdminDashboard() {
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'registrations', label: 'Competition Registrations' },
                 { id: 'coding-classes', label: 'Coding Class Registrations' },
+                { id: 'professional-trainings', label: 'Professional Trainings' },
                 { id: 'staff-notes', label: 'Staff E-Notes' },
                 { id: 'settings', label: 'General Settings' },
               ] as const
@@ -1691,6 +1785,121 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'professional-trainings' && (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Professional Training Registrations</h2>
+                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  {professionalTrainings.length} Total
+                </span>
+              </div>
+
+              {professionalTrainings.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-lg">No professional training registrations yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Name</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Email</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Phone</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Training Program</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Schedule</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Level</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {professionalTrainings.map((training) => (
+                        <tr key={training.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="font-semibold text-gray-800 text-sm">{training.full_name}</div>
+                            {training.organization && (
+                              <div className="text-xs text-gray-500">{training.organization}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{training.email}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{training.phone}</td>
+                          <td className="px-4 py-3">
+                            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                              {training.training_program}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{training.preferred_schedule}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              training.experience_level === 'Beginner' ? 'bg-green-100 text-green-800' :
+                              training.experience_level === 'Intermediate' ? 'bg-blue-100 text-blue-800' :
+                              'bg-purple-100 text-purple-800'
+                            }`}>
+                              {training.experience_level}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={training.status || 'pending'}
+                              onChange={async (e) => {
+                                const result = await updateProfessionalTraining(training.id, { status: e.target.value });
+                                if (result.success) {
+                                  fetchProfessionalTrainingsData();
+                                } else {
+                                  alert('Failed to update status');
+                                }
+                              }}
+                              className={`px-2 py-1 rounded text-xs font-semibold border-0 ${
+                                training.status === 'enrolled' ? 'bg-green-100 text-green-800' :
+                                training.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                                training.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="enrolled">Enrolled</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedRegistration(training);
+                                  setIsRegModalOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-xs font-semibold"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (confirm('Delete this registration?')) {
+                                    const result = await deleteProfessionalTraining(training.id);
+                                    if (result.success) {
+                                      fetchProfessionalTrainingsData();
+                                    } else {
+                                      alert('Failed to delete');
+                                    }
+                                  }
+                                }}
+                                className="text-red-600 hover:text-red-800 text-xs font-semibold"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}

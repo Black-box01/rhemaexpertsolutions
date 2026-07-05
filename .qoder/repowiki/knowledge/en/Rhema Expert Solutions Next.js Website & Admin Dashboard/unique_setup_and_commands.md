@@ -1,0 +1,1 @@
+Requires `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` environment variables; `ADMIN_PASSWORD` falls back to `rhema2026` if not provided. Database must be bootstrapped by running `supabase_schema.sql` followed by the `supabase_migration_*.sql` files against the Supabase project before the admin dashboard will function.

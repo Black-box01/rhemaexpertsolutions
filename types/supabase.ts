@@ -110,3 +110,22 @@ export interface RhemaStaffNote {
   file_urls?: (string | { name: string; url: string })[];
   is_pinned?: boolean;
 }
+
+export interface RhemaProfessionalTraining {
+  id: string;
+  created_at: string;
+  updated_at?: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth?: string;
+  organization?: string;
+  job_title?: string;
+  training_program: string;
+  preferred_schedule: string;
+  experience_level: string;
+  payment_preference: string;
+  additional_info?: string;
+  status?: string;
+}
