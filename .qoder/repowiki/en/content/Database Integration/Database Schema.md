@@ -16,15 +16,18 @@
 - [lib/email.ts](file://lib/email.ts)
 - [app/competition/page.tsx](file://app/competition/page.tsx)
 - [app/coding-classes/page.tsx](file://app/coding-classes/page.tsx)
+- [app/professional-trainings/page.tsx](file://app/professional-trainings/page.tsx)
+- [app/admin/dashboard/page.tsx](file://app/admin/dashboard/page.tsx)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive documentation for the new `rhema_staff_notes` table with e-note functionality
-- Updated architecture diagrams to include staff notes system
-- Added new section covering staff notes features including file attachments, pinning, and search capabilities
-- Enhanced type mappings to include RhemaStaffNote interface
-- Updated server actions documentation to cover staff notes CRUD operations
+- Added comprehensive documentation for the new `rhema_professional_trainings` table with complete participant information schema
+- Updated architecture diagrams to include professional training system integration
+- Added detailed section covering professional training features including participant details, program preferences, and enrollment tracking
+- Enhanced type mappings to include RhemaProfessionalTraining interface
+- Updated server actions documentation to cover professional training CRUD operations and email notifications
+- Integrated professional training data into admin dashboard management system
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -62,6 +65,8 @@ A1["app/actions/registration.ts<br/>Server action CRUD"]
 A2["app/actions/coding-classes.ts<br/>Server action CRUD"]
 A3["app/actions/notes.ts<br/>Staff notes CRUD + file upload"]
 E1["lib/email.ts<br/>Notifications"]
+P1["app/professional-trainings/page.tsx<br/>Professional Training Form"]
+D1["app/admin/dashboard/page.tsx<br/>Admin Management"]
 end
 S1 --> T1
 S2 --> T1
@@ -76,6 +81,10 @@ C2 --> A3
 A1 --> E1
 A2 --> E1
 A3 --> E1
+P1 --> A1
+D1 --> A1
+D1 --> A2
+D1 --> A3
 ```
 
 **Diagram sources**
@@ -91,6 +100,8 @@ A3 --> E1
 - [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-147)
 - [lib/email.ts:46-86](file://lib/email.ts#L46-86)
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-400)
+- [app/admin/dashboard/page.tsx:1-1910](file://app/admin/dashboard/page.tsx#L1-1910)
 
 **Section sources**
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
@@ -106,7 +117,7 @@ A3 --> E1
 - **rhema_registrations**: Stores competition registration records with school and parent/guardian contact details, plus optional school phone.
 - **rhema_coding_class_registrations**: Stores online coding class registration records with course selections, payment plan, and status.
 - **rhema_staff_notes**: Manages staff e-notes with title, content, author, category, priority, status, tags, file attachments, and pinning functionality.
-- **rhema_professional_trainings**: Handles professional training registration with participant details, program preferences, and enrollment status.
+- **rhema_professional_trainings**: Handles professional training registration with comprehensive participant details, program preferences, experience levels, and enrollment status tracking.
 - **Types**: TypeScript interfaces mirror the schema for compile-time safety and IDE support.
 - **Clients**: Public client for read/write via RLS; Admin client for bypassing RLS using a service role key.
 - **Actions**: Server actions encapsulate inserts, updates, and deletes for all registration and note tables.
@@ -134,18 +145,18 @@ participant FE as "Frontend Page"
 participant SA as "Server Action"
 participant SC as "Supabase Client"
 participant DB as "Supabase Postgres"
-FE->>SA : Call submitRegistration(formData)
-SA->>SC : from('rhema_registrations').insert([...]).select()
-SC->>DB : INSERT INTO rhema_registrations
+FE->>SA : Call submitProfessionalTrainingRegistration(formData)
+SA->>SC : from('rhema_professional_trainings').insert([...]).select()
+SC->>DB : INSERT INTO rhema_professional_trainings
 DB-->>SC : Inserted row(s)
 SC-->>SA : { data, error }
 SA-->>FE : { success, data } or { error }
 ```
 
 **Diagram sources**
-- [app/competition/page.tsx:32-64](file://app/competition/page.tsx#L32-L64)
-- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [lib/supabase.ts:16-19](file://lib/supabase.ts#L16-L19)
+- [app/professional-trainings/page.tsx:32-64](file://app/professional-trainings/page.tsx#L32-64)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-207)
+- [lib/supabase.ts:16-19](file://lib/supabase.ts#L16-19)
 
 ## Detailed Component Analysis
 
@@ -328,7 +339,7 @@ boolean is_pinned
 - [types/supabase.ts:99-112](file://types/supabase.ts#L99-L112)
 
 ### Table: rhema_professional_trainings
-- Purpose: Capture professional training registration entries with participant details, program preferences, and enrollment status.
+- Purpose: Capture professional training registration entries with comprehensive participant details, program preferences, and enrollment status.
 - Primary key: id (UUID, default gen_random_uuid)
 - Timestamps: created_at, updated_at (both timestamptz, default now())
 - Required fields: full_name, email, phone, gender, training_program, preferred_schedule, experience_level, payment_preference
@@ -395,7 +406,7 @@ TypeScript interfaces mirror the schema for runtime safety and autocomplete.
 - RhemaRegistration: Maps to rhema_registrations
 - RhemaCodingClassRegistration: Maps to rhema_coding_class_registrations
 - RhemaStaffNote: Maps to rhema_staff_notes with enhanced file URL support
-- RhemaProfessionalTraining: Maps to rhema_professional_trainings
+- RhemaProfessionalTraining: Maps to rhema_professional_trainings with comprehensive participant information
 
 **Section sources**
 - [types/supabase.ts:56-132](file://types/supabase.ts#L56-L132)
@@ -417,6 +428,11 @@ TypeScript interfaces mirror the schema for runtime safety and autocomplete.
   - Validation of required fields and course selection
   - Insert into rhema_coding_class_registrations
   - Optional email notification to administrators
+- Professional training registration:
+  - Comprehensive validation of participant information and training preferences
+  - Insert into rhema_professional_trainings with status tracking
+  - Email notification with detailed participant information and program details
+  - Integration with admin dashboard for management and status updates
 - Staff notes management:
   - Authentication check before any operation
   - CRUD operations with pagination and search capabilities
@@ -426,32 +442,30 @@ TypeScript interfaces mirror the schema for runtime safety and autocomplete.
 
 ```mermaid
 sequenceDiagram
-participant FE as "Frontend Page"
+participant FE as "Professional Training Page"
 participant SA as "Server Action"
 participant SC as "Supabase Admin Client"
 participant DB as "Supabase Postgres"
 participant EMAIL as "Email Service"
-participant STORAGE as "Supabase Storage"
-FE->>SA : Call saveStaffNote(noteData)
-SA->>SA : Check authentication
-SA->>SC : from('rhema_staff_notes').insert(data)
-SC->>DB : INSERT INTO rhema_staff_notes
+FE->>SA : Call submitProfessionalTrainingRegistration(formData)
+SA->>SA : Validate participant info & training preferences
+SA->>SC : from('rhema_professional_trainings').insert(data)
+SC->>DB : INSERT INTO rhema_professional_trainings
 DB-->>SC : Inserted row
 SC-->>SA : { data, error }
-SA->>EMAIL : sendENoteNotificationEmail(noteData)
+SA->>EMAIL : sendProfessionalTrainingRegistrationEmail(formData)
 EMAIL-->>SA : { success, error }
 SA-->>FE : { success, data } or { error }
 ```
 
 **Diagram sources**
-- [app/coding-classes/page.tsx:56-86](file://app/coding-classes/page.tsx#L56-L86)
-- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
-- [app/actions/notes.ts:61-98](file://app/actions/notes.ts#L61-L98)
-- [lib/email.ts:135-191](file://lib/email.ts#L135-L191)
+- [app/professional-trainings/page.tsx:32-64](file://app/professional-trainings/page.tsx#L32-64)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-207)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-236)
 
 **Section sources**
-- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
+- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-84)
+- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-76)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-147)
 - [lib/email.ts:46-86](file://lib/email.ts#L46-86)
 
@@ -461,12 +475,16 @@ SA-->>FE : { success, data } or { error }
 - Email notifications are triggered after successful inserts.
 - Type interfaces ensure consistent field names and types across the stack.
 - Staff notes system integrates with Supabase Storage for file attachments.
+- Professional training system includes comprehensive admin dashboard integration for management and reporting.
 
 ```mermaid
 graph LR
 P1["app/competition/page.tsx"] --> A1["app/actions/registration.ts"]
 P2["app/coding-classes/page.tsx"] --> A2["app/actions/coding-classes.ts"]
-P3["Admin Dashboard"] --> A3["app/actions/notes.ts"]
+P3["app/professional-trainings/page.tsx"] --> A1
+P4["Admin Dashboard"] --> A1
+P4 --> A2
+P4 --> A3["app/actions/notes.ts"]
 A1 --> C2["lib/supabase-admin.ts"]
 A2 --> C2
 A3 --> C2
@@ -481,20 +499,22 @@ T1 --> A3
 ```
 
 **Diagram sources**
-- [app/competition/page.tsx:32-64](file://app/competition/page.tsx#L32-L64)
-- [app/coding-classes/page.tsx:56-86](file://app/coding-classes/page.tsx#L56-L86)
-- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
+- [app/competition/page.tsx:32-64](file://app/competition/page.tsx#L32-64)
+- [app/coding-classes/page.tsx:56-86](file://app/coding-classes/page.tsx#L56-86)
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-400)
+- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-84)
+- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-76)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-147)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
 - [lib/email.ts:46-86](file://lib/email.ts#L46-86)
 - [types/supabase.ts:56-132](file://types/supabase.ts#L56-L132)
 
 **Section sources**
-- [app/competition/page.tsx:32-64](file://app/competition/page.tsx#L32-L64)
-- [app/coding-classes/page.tsx:56-86](file://app/coding-classes/page.tsx#L56-L86)
-- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
+- [app/competition/page.tsx:32-64](file://app/competition/page.tsx#L32-64)
+- [app/coding-classes/page.tsx:56-86](file://app/coding-classes/page.tsx#L56-86)
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-400)
+- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-84)
+- [app/actions/coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-76)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-147)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
 - [lib/email.ts:46-86](file://lib/email.ts#L46-86)
@@ -510,6 +530,7 @@ T1 --> A3
 - **Data volume**: For high-volume inserts, batch operations where feasible and monitor replication lag.
 - **Network latency**: Server actions reduce client-side logic and minimize repeated round-trips.
 - **Storage optimization**: Staff notes use dedicated storage bucket with appropriate access policies.
+- **Professional training optimization**: Email lookups and program-based queries are optimized through dedicated indexes for better admin dashboard performance.
 
 [No sources needed since this section provides general guidance]
 
@@ -528,6 +549,10 @@ Common issues and resolutions:
   - File upload failures: Check storage bucket permissions and file size limits
   - Search functionality: Ensure full-text search patterns are properly escaped
   - Pinning functionality: Verify boolean field handling in frontend components
+- Professional training specific issues:
+  - Registration form validation: Ensure all required fields (full_name, email, phone, gender, training_program, preferred_schedule, experience_level, payment_preference) are properly validated
+  - Program dropdown options: Verify training programs list matches database expectations
+  - Status updates: Confirm admin dashboard status changes persist correctly in database
 
 **Section sources**
 - [lib/supabase.ts:10-13](file://lib/supabase.ts#L10-L13)
@@ -536,4 +561,8 @@ Common issues and resolutions:
 - [lib/email.ts:24-27](file://lib/email.ts#L24-L27)
 
 ## Conclusion
-The database schema for Rhema Expert Solutions consists of four comprehensive tables supporting competition registrations, coding class registrations, professional training registrations, and staff e-note management. The design emphasizes simplicity, clear defaults, and RLS for controlled access. Migrations define the evolving schema with strategic indexing for performance optimization, while server actions and typed interfaces ensure robust, type-safe data access. The staff notes system includes advanced features like file attachments, pinning, categorization, and search capabilities. For production, the existing indexes provide good query performance, and the modular architecture supports future scalability.
+The database schema for Rhema Expert Solutions consists of four comprehensive tables supporting competition registrations, coding class registrations, professional training registrations, and staff e-note management. The design emphasizes simplicity, clear defaults, and RLS for controlled access. Migrations define the evolving schema with strategic indexing for performance optimization, while server actions and typed interfaces ensure robust, type-safe data access. 
+
+The newly added professional training system provides comprehensive participant information management with detailed program preferences, experience level tracking, and payment option handling. The system includes advanced features like automated email notifications, admin dashboard integration for management and reporting, and optimized database indexes for efficient querying. The modular architecture supports future scalability and maintains consistency with existing registration systems while providing specialized functionality for professional development programs.
+
+For production, the existing indexes provide good query performance across all tables, and the comprehensive type safety ensures reliable data operations throughout the application stack.

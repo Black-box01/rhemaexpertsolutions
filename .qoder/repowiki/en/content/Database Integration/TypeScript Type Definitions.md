@@ -7,10 +7,23 @@
 - [lib/supabase-admin.ts](file://lib/supabase-admin.ts)
 - [supabase_schema.sql](file://supabase_schema.sql)
 - [supabase_migration_add_coding_classes.sql](file://supabase_migration_add_coding_classes.sql)
+- [supabase_migration_professional_trainings.sql](file://supabase_migration_professional_trainings.sql)
 - [app/actions/registration.ts](file://app/actions/registration.ts)
 - [app/actions/coding-classes.ts](file://app/actions/coding-classes.ts)
+- [app/professional-trainings/page.tsx](file://app/professional-trainings/page.tsx)
+- [app/admin/dashboard/page.tsx](file://app/admin/dashboard/page.tsx)
+- [lib/email.ts](file://lib/email.ts)
 - [package.json](file://package.json)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive documentation for the new RhemaProfessionalTraining TypeScript interface
+- Updated schema and column constraints section to include professional trainings table
+- Enhanced type-safe query operations section with professional training examples
+- Added professional training email notification system documentation
+- Updated admin dashboard integration for professional training management
+- Expanded relationship between database columns and TypeScript interfaces section
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -49,40 +62,55 @@ end
 subgraph "Lib"
 LPublic["lib/supabase.ts"]
 LAdmin["lib/supabase-admin.ts"]
+LEmail["lib/email.ts"]
 end
 subgraph "Actions"
 AReg["app/actions/registration.ts"]
 ACoding["app/actions/coding-classes.ts"]
+APage["app/professional-trainings/page.tsx"]
+ADash["app/admin/dashboard/page.tsx"]
 end
 subgraph "Schema"
 SMain["supabase_schema.sql"]
 SCoding["supabase_migration_add_coding_classes.sql"]
+SProf["supabase_migration_professional_trainings.sql"]
 end
 AReg --> LAdmin
 ACoding --> LAdmin
+APage --> AReg
+ADash --> AReg
 LPublic --> |"createClient()"| Supabase["Supabase Runtime"]
 LAdmin --> |"createClient()"| Supabase
+LEmail --> |"Email Notifications"| Supabase
 TSupabase --> |"Interfaces used by"| AReg
 TSupabase --> |"Interfaces used by"| ACoding
+TSupabase --> |"Interfaces used by"| ADash
 SMain --> |"Tables"| Supabase
 SCoding --> |"Tables"| Supabase
+SProf --> |"Tables"| Supabase
 ```
 
 **Diagram sources**
 - [lib/supabase.ts:16-24](file://lib/supabase.ts#L16-L24)
-- [lib/supabase-admin.ts:14-18](file://lib/supabase-admin.ts#L14-L18)
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [lib/supabase-admin.ts:14-18](file://lib/supabase-admin.ts#L14-18)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
+- [app/actions/registration.ts:1-252](file://app/actions/registration.ts#L1-L252)
 - [app/actions/coding-classes.ts:1-156](file://app/actions/coding-classes.ts#L1-L156)
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-L400)
+- [app/admin/dashboard/page.tsx:1-1911](file://app/admin/dashboard/page.tsx#L1-L1911)
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 **Section sources**
 - [lib/supabase.ts:1-25](file://lib/supabase.ts#L1-L25)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
+- [lib/email.ts:1-237](file://lib/email.ts#L1-L237)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 ## Core Components
 - Supabase client initialization and configuration:
@@ -90,44 +118,56 @@ SCoding --> |"Tables"| Supabase
   - Admin client using a Service Role Key for bypassing RLS during server-side operations
 - Manually authored TypeScript interfaces that define shapes for domain entities
 - Server actions that encapsulate type-safe database operations and error handling
+- Email notification system for registration confirmations and administrative alerts
 
 Key responsibilities:
 - lib/supabase.ts: Creates the public client and exposes a configuration checker
 - lib/supabase-admin.ts: Creates the admin client with optional Service Role Key fallback
+- lib/email.ts: Handles email notifications including professional training registration emails
 - types/supabase.ts: Defines TypeScript interfaces mirroring database tables and columns
 - app/actions/registration.ts and app/actions/coding-classes.ts: Demonstrate typed inserts, selects, updates, deletes, and partial updates
+- app/professional-trainings/page.tsx: Professional training registration form with type safety
+- app/admin/dashboard/page.tsx: Administrative interface for managing all registrations including professional trainings
 
 **Section sources**
 - [lib/supabase.ts:1-25](file://lib/supabase.ts#L1-L25)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [lib/email.ts:1-237](file://lib/email.ts#L1-L237)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
+- [app/actions/registration.ts:1-252](file://app/actions/registration.ts#L1-L252)
 - [app/actions/coding-classes.ts:1-156](file://app/actions/coding-classes.ts#L1-L156)
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-L400)
+- [app/admin/dashboard/page.tsx:1-1911](file://app/admin/dashboard/page.tsx#L1-L1911)
 
 ## Architecture Overview
 The runtime architecture ties together Supabase clients, database schemas, and typed actions:
 
 ```mermaid
 sequenceDiagram
-participant UI as "Client Component"
-participant Action as "Server Action"
+participant UI as "Professional Training Page"
+participant Action as "submitProfessionalTrainingRegistration"
 participant Admin as "supabaseAdmin"
+participant Email as "sendProfessionalTrainingRegistrationEmail"
 participant PostgREST as "PostgREST API"
 participant DB as "Supabase Database"
 UI->>Action : "Call server action with form data"
 Action->>Admin : "insert(...).select()"
 Admin->>PostgREST : "HTTP request"
-PostgREST->>DB : "INSERT INTO rhema_registrations"
+PostgREST->>DB : "INSERT INTO rhema_professional_trainings"
 DB-->>PostgREST : "Rows inserted"
 PostgREST-->>Admin : "Typed rows"
 Admin-->>Action : "Typed rows"
+Action->>Email : "Send notification email"
+Email-->>Action : "Email sent successfully"
 Action-->>UI : "{success : true, data}"
 ```
 
 **Diagram sources**
-- [app/actions/registration.ts:45-65](file://app/actions/registration.ts#L45-L65)
-- [lib/supabase-admin.ts:14-18](file://lib/supabase-admin.ts#L14-L18)
-- [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
+- [app/professional-trainings/page.tsx:32-64](file://app/professional-trainings/page.tsx#L32-L64)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
+- [lib/supabase-admin.ts:14-18](file://lib/supabase-admin.ts#L14-18)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 ## Detailed Component Analysis
 
@@ -168,7 +208,7 @@ WarnPublic --> End
 
 ### Generated Types vs Manual Interfaces
 - The project includes a comment indicating that types can be generated using the Supabase CLI and placed in types/supabase.ts
-- The current manual interfaces in types/supabase.ts define shapes for domain entities such as registrations and coding-class registrations
+- The current manual interfaces in types/supabase.ts define shapes for domain entities such as registrations, coding-class registrations, and professional trainings
 - These interfaces reflect database columns, optionality, arrays, and defaults visible in the schema files
 
 ```mermaid
@@ -206,20 +246,40 @@ class RhemaCodingClassRegistration {
 +string notes
 +string status
 }
+class RhemaProfessionalTraining {
++string id
++string created_at
++string updated_at
++string full_name
++string email
++string phone
++string gender
++string date_of_birth
++string organization
++string job_title
++string training_program
++string preferred_schedule
++string experience_level
++string payment_preference
++string additional_info
++string status
+}
 ```
 
 **Diagram sources**
-- [types/supabase.ts:56-97](file://types/supabase.ts#L56-L97)
+- [types/supabase.ts:56-131](file://types/supabase.ts#L56-L131)
 
 **Section sources**
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
 
 ### Schema and Column Constraints
 - Primary table: rhema_registrations
   - UUID primary key, timestamptz created_at, required text fields, integer age, optional fields, default status and competition name
 - Secondary table: rhema_coding_class_registrations
   - UUID primary key, timestamptz created_at, arrays (courses), optional fields, defaults for experience_level and status
-- Both tables enable Row Level Security and include policies for public insert/select
+- Professional trainings table: rhema_professional_trainings
+  - UUID primary key, timestamptz timestamps, required text fields for personal and professional information, optional fields for additional details, default status
+- All tables enable Row Level Security and include policies for service role access
 
 ```mermaid
 erDiagram
@@ -256,15 +316,35 @@ date preferred_start_date
 text notes
 text status
 }
+RHEMA_PROFESSIONAL_TRAININGS {
+uuid id PK
+timestamptz created_at
+timestamptz updated_at
+text full_name
+text email
+text phone
+text gender
+date date_of_birth
+text organization
+text job_title
+text training_program
+text preferred_schedule
+text experience_level
+text payment_preference
+text additional_info
+text status
+}
 ```
 
 **Diagram sources**
 - [supabase_schema.sql:2-18](file://supabase_schema.sql#L2-L18)
 - [supabase_migration_add_coding_classes.sql:2-16](file://supabase_migration_add_coding_classes.sql#L2-L16)
+- [supabase_migration_professional_trainings.sql:2-19](file://supabase_migration_professional_trainings.sql#L2-L19)
 
 **Section sources**
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 ### Type-Safe Query Operations in Actions
 - Insert with select:
@@ -276,29 +356,37 @@ text status
   - Use Partial to accept subsets of fields for updates
 - Delete:
   - Remove records by id
+- Professional training specific operations:
+  - Comprehensive validation for required fields
+  - Email notification integration upon successful registration
+  - Status management (pending, contacted, enrolled, cancelled)
 
 ```mermaid
 sequenceDiagram
-participant Action as "submitRegistration"
+participant Action as "submitProfessionalTrainingRegistration"
 participant Admin as "supabaseAdmin"
+participant Email as "Email Service"
 participant PostgREST as "PostgREST API"
 participant DB as "Database"
 Action->>Action : "Validate input"
 Action->>Admin : "insert([...]).select()"
 Admin->>PostgREST : "POST /rpc/insert"
-PostgREST->>DB : "INSERT"
+PostgREST->>DB : "INSERT INTO rhema_professional_trainings"
 DB-->>PostgREST : "Inserted rows"
 PostgREST-->>Admin : "Typed rows"
 Admin-->>Action : "Typed rows"
+Action->>Email : "sendProfessionalTrainingRegistrationEmail(formData)"
+Email-->>Action : "Email sent successfully"
 Action-->>Action : "Return {success : true, data}"
 ```
 
 **Diagram sources**
-- [app/actions/registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
 - [app/actions/coding-classes.ts:48-76](file://app/actions/coding-classes.ts#L48-L76)
 
 **Section sources**
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [app/actions/registration.ts:1-252](file://app/actions/registration.ts#L1-L252)
 - [app/actions/coding-classes.ts:1-156](file://app/actions/coding-classes.ts#L1-L156)
 
 ### Relationship Between Database Columns and TypeScript Interfaces
@@ -312,11 +400,16 @@ Action-->>Action : "Return {success : true, data}"
 - Optionality and nullability:
   - Prefer explicit null handling in actions when optional fields are omitted
   - Use union types or Partial for updates to avoid sending undefined
+- Professional training specific mappings:
+  - Date fields use string type for flexibility
+  - Organization and job title are optional professional information
+  - Status field supports workflow states (pending, contacted, enrolled, cancelled)
 
 **Section sources**
-- [types/supabase.ts:56-97](file://types/supabase.ts#L56-L97)
+- [types/supabase.ts:56-131](file://types/supabase.ts#L56-L131)
 - [supabase_schema.sql:2-18](file://supabase_schema.sql#L2-L18)
 - [supabase_migration_add_coding_classes.sql:2-16](file://supabase_migration_add_coding_classes.sql#L2-L16)
+- [supabase_migration_professional_trainings.sql:2-19](file://supabase_migration_professional_trainings.sql#L2-L19)
 
 ### Maintaining and Updating Type Definitions
 - Generation process:
@@ -336,6 +429,7 @@ Action-->>Action : "Return {success : true, data}"
 - [lib/supabase.ts:4-5](file://lib/supabase.ts#L4-L5)
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 ### Best Practices for Using Generated Types
 - Server actions:
@@ -348,11 +442,48 @@ Action-->>Action : "Return {success : true, data}"
 - Environment safety:
   - Guard against missing environment variables and log warnings
   - Ensure admin client uses a service role key for privileged operations
+- Professional training specific practices:
+  - Form validation ensures all required fields are present before submission
+  - Email notifications provide immediate feedback for administrative workflows
+  - Status management enables clear tracking of registration lifecycle
 
 **Section sources**
 - [app/actions/registration.ts:6-20](file://app/actions/registration.ts#L6-L20)
 - [app/actions/registration.ts:102-115](file://app/actions/registration.ts#L102-L115)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
 - [lib/supabase-admin.ts:7-9](file://lib/supabase-admin.ts#L7-L9)
+- [app/professional-trainings/page.tsx:10-25](file://app/professional-trainings/page.tsx#L10-L25)
+
+### Professional Training System Integration
+The professional training system demonstrates advanced type safety patterns:
+
+- **Form Handling**: Client-side form with complete type safety using the RhemaProfessionalTraining interface
+- **Server-Side Processing**: Comprehensive validation and database insertion with automatic email notifications
+- **Administrative Interface**: Full CRUD operations with status management and detailed viewing capabilities
+- **Email Integration**: Automated notifications for new registrations with formatted HTML templates
+
+```mermaid
+flowchart TD
+A["Professional Training Form"] --> B["TypeScript Validation"]
+B --> C["Server Action submitProfessionalTrainingRegistration"]
+C --> D["Database Insert with Type Safety"]
+D --> E["Email Notification Send"]
+E --> F["Success Response"]
+F --> G["Admin Dashboard Update"]
+G --> H["Status Management"]
+```
+
+**Diagram sources**
+- [app/professional-trainings/page.tsx:32-64](file://app/professional-trainings/page.tsx#L32-L64)
+- [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
+- [app/admin/dashboard/page.tsx:1800-1911](file://app/admin/dashboard/page.tsx#L1800-L1911)
+
+**Section sources**
+- [app/professional-trainings/page.tsx:1-400](file://app/professional-trainings/page.tsx#L1-L400)
+- [app/actions/registration.ts:132-252](file://app/actions/registration.ts#L132-L252)
+- [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
+- [app/admin/dashboard/page.tsx:1800-1911](file://app/admin/dashboard/page.tsx#L1800-L1911)
 
 ## Dependency Analysis
 - Runtime dependencies:
@@ -360,6 +491,7 @@ Action-->>Action : "Return {success : true, data}"
 - Internal dependencies:
   - Server actions depend on lib/supabase-admin.ts for privileged operations
   - Public client from lib/supabase.ts supports read-mostly scenarios
+  - Email service provides notification functionality for various registration types
 - Schema dependencies:
   - Database tables and policies drive the shape and behavior of typed operations
 
@@ -368,37 +500,47 @@ graph LR
 Pkg["package.json"] --> Dep["@supabase/supabase-js"]
 Dep --> LibPub["lib/supabase.ts"]
 Dep --> LibAdmin["lib/supabase-admin.ts"]
+Dep --> LibEmail["lib/email.ts"]
 LibAdmin --> Actions["app/actions/*.ts"]
+LibEmail --> Actions
 Types["types/supabase.ts"] --> Actions
 Schema["supabase_schema.sql"] --> Actions
 Schema2["supabase_migration_add_coding_classes.sql"] --> Actions
+Schema3["supabase_migration_professional_trainings.sql"] --> Actions
 ```
 
 **Diagram sources**
 - [package.json:11-18](file://package.json#L11-L18)
 - [lib/supabase.ts:1-25](file://lib/supabase.ts#L1-L25)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [lib/email.ts:1-237](file://lib/email.ts#L1-L237)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
+- [app/actions/registration.ts:1-252](file://app/actions/registration.ts#L1-L252)
 - [app/actions/coding-classes.ts:1-156](file://app/actions/coding-classes.ts#L1-L156)
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 **Section sources**
 - [package.json:1-32](file://package.json#L1-L32)
 - [lib/supabase.ts:1-25](file://lib/supabase.ts#L1-L25)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
-- [types/supabase.ts:1-113](file://types/supabase.ts#L1-L113)
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [lib/email.ts:1-237](file://lib/email.ts#L1-L237)
+- [types/supabase.ts:1-132](file://types/supabase.ts#L1-L132)
+- [app/actions/registration.ts:1-252](file://app/actions/registration.ts#L1-L252)
 - [app/actions/coding-classes.ts:1-156](file://app/actions/coding-classes.ts#L1-L156)
 - [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33)
 - [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 
 ## Performance Considerations
 - Minimize payload sizes by selecting only required columns in selects
 - Use server actions to centralize transformations and reduce client-side work
 - Batch operations when feasible to reduce round-trips
 - Keep environment variable checks early to fail fast and avoid unnecessary requests
+- Professional training optimizations:
+  - Efficient indexing on frequently queried fields (created_at, status, training_program, email)
+  - Optimized email sending with proper error handling to prevent blocking operations
 
 ## Troubleshooting Guide
 Common type-related issues and debugging strategies:
@@ -414,11 +556,16 @@ Common type-related issues and debugging strategies:
 - Error handling patterns:
   - Distinguish between typed errors returned by Supabase and unexpected exceptions
   - Log structured errors and return consistent response shapes
+- Professional training specific issues:
+  - Email delivery failures should not block registration completion
+  - Status transitions should be validated and logged appropriately
+  - Form validation errors should provide clear user feedback
 
 **Section sources**
 - [lib/supabase.ts:10-13](file://lib/supabase.ts#L10-L13)
 - [lib/supabase-admin.ts:7-9](file://lib/supabase-admin.ts#L7-L9)
 - [app/actions/registration.ts:67-83](file://app/actions/registration.ts#L67-L83)
+- [app/actions/registration.ts:190-206](file://app/actions/registration.ts#L190-L206)
 - [app/actions/coding-classes.ts:59-75](file://app/actions/coding-classes.ts#L59-L75)
 
 ## Conclusion
@@ -427,10 +574,16 @@ The project demonstrates a pragmatic approach to type-safe Supabase interactions
 - Maintain manual interfaces for domain entities when convenient, but align them with schema constraints
 - Encapsulate database operations in server actions with strong typing and robust error handling
 - Leverage the admin client for privileged operations and the public client for read-mostly scenarios
+- Implement comprehensive email notification systems for enhanced user experience
+- Support complex business workflows like professional training registration with status management
 
 ## Appendices
 - Example references:
   - Type-safe insert and select: [app/actions/registration.ts:45-65](file://app/actions/registration.ts#L45-L65)
   - Partial update pattern: [app/actions/registration.ts:102-115](file://app/actions/registration.ts#L102-L115)
   - Typed coding class registration operations: [app/actions/coding-classes.ts:48-76](file://app/actions/coding-classes.ts#L48-L76)
-  - Schema definitions: [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33), [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29)
+  - Professional training registration with email notifications: [app/actions/registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+  - Professional training email template: [lib/email.ts:193-236](file://lib/email.ts#L193-L236)
+  - Professional training form implementation: [app/professional-trainings/page.tsx:287-384](file://app/professional-trainings/page.tsx#L287-L384)
+  - Admin dashboard professional training management: [app/admin/dashboard/page.tsx:1800-1911](file://app/admin/dashboard/page.tsx#L1800-L1911)
+  - Schema definitions: [supabase_schema.sql:1-33](file://supabase_schema.sql#L1-L33), [supabase_migration_add_coding_classes.sql:1-29](file://supabase_migration_add_coding_classes.sql#L1-L29), [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)

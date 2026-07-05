@@ -1,6 +1,6 @@
-- Server actions are declared with a `'use server'` directive at the top of each file and return a `{ success, error? }` object rather than throwing.
-- Every mutating server action begins by calling `checkAuth()` (or `ensureAuthenticated()` which wraps it) and returns `{ success: false, error: 'Unauthorized' }` when unauthenticated.
-- After a successful write, server actions call `revalidatePath('/admin/dashboard')` so the dashboard reflects changes without a full reload.
-- Supabase queries chain `.order(...)` then optional `.eq(...)` / `.or(...)` filters, and use `.range(from, to)` for server-side pagination with a parallel `.select('*', { count: 'exact' })` for total counts.
-- File uploads go through a server action that generates a unique path `${Date.now()}-${random}.${ext}` under `attachments/` in the `staff-notes` storage bucket and returns the public URL.
-- Client components that need auth guard their entry point with a `useEffect` calling `checkAuth()` and `router.push('/admin')` on failure.
+- Server actions are declared with `'use server'` at the top of each file and return a uniform `{ success: boolean; error?: string; data? }` shape consumed by the dashboard.
+- Every server action begins with `const isAuth = await checkAuth()` and early-returns `{ success: false, error: 'Unauthorized' }` before touching Supabase.
+- After mutating operations (`saveStaffNote`, `deleteStaffNote`, etc.) the action calls `revalidatePath('/admin/dashboard')` instead of manual client refresh.
+- Supabase queries use the service-role `supabaseAdmin` client from `@/lib/supabase-admin`; the public `supabase` client from `@/lib/supabase.ts` is reserved for read-only contexts.
+- All database row shapes are imported from the single `@/types/supabase.ts` module rather than re-declared per file.
+- File uploads in server actions generate names as `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}` and store them under a fixed storage bucket path (`attachments/...`).

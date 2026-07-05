@@ -3,24 +3,19 @@
 <cite>
 **Referenced Files in This Document**
 - [email.ts](file://lib/email.ts)
-- [notes.ts](file://app/actions/notes.ts)
 - [registration.ts](file://app/actions/registration.ts)
-- [coding-classes.ts](file://app/actions/coding-classes.ts)
-- [page.tsx (Competition)](file://app/competition/page.tsx)
-- [page.tsx (Coding Classes)](file://app/coding-classes/page.tsx)
 - [page.tsx (Professional Trainings)](file://app/professional-trainings/page.tsx)
-- [supabase-admin.ts](file://lib/supabase-admin.ts)
+- [supabase_migration_professional_trainings.sql](file://supabase_migration_professional_trainings.sql)
 - [package.json](file://package.json)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive documentation for the new `sendENoteNotificationEmail` function with rich HTML formatting, color-coded categories, and attachment links
-- Updated architecture diagrams to include e-note notification workflow
-- Enhanced component analysis section with detailed coverage of the e-note email functionality
-- Added professional training registration email handler documentation
-- Updated troubleshooting guide with e-note specific scenarios
-- Expanded appendices with examples for implementing new email templates
+- Updated Professional Training Registration Email Handler section with detailed purple-themed HTML formatting specifications
+- Enhanced architecture diagrams to include professional training registration workflow
+- Added comprehensive coverage of the new `sendProfessionalTrainingRegistrationEmail()` function implementation
+- Updated troubleshooting guide with professional training specific scenarios
+- Expanded appendices with examples for extending the email service with additional notification types
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -35,16 +30,14 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document describes the comprehensive email service implementation used by Rhema Expert Solutions. It covers the Nodemailer integration, SMTP configuration, transport setup, and the complete email sending pipeline. The service provides multiple specialized email handlers including generic email functionality, competition registration notifications, coding class registration alerts, staff e-note notifications with rich formatting, and professional training registration emails. Each handler features sophisticated HTML templating, recipient management, error handling, logging mechanisms, and graceful fallback behaviors when email services are unavailable.
+This document describes the comprehensive email service implementation used by Rhema Expert Solutions. It covers the Nodemailer integration, SMTP configuration, transport setup, and the complete email sending pipeline. The service provides multiple specialized email handlers including generic email functionality, competition registration notifications, coding class registration alerts, staff e-note notifications with rich formatting, and professional training registration emails with purple-themed styling. Each handler features sophisticated HTML templating, recipient management, error handling, logging mechanisms, and graceful fallback behaviors when email services are unavailable.
 
 ## Project Structure
 The email service is implemented as a reusable library module consumed by various server action modules that handle different types of form submissions and administrative operations. The relevant parts of the project structure are:
-- lib/email.ts: Nodemailer transport setup and all email functions including the new e-note notification system
-- app/actions/notes.ts: Staff notes management server actions invoking e-note email notifications
+- lib/email.ts: Nodemailer transport setup and all email functions including the new professional training registration system
 - app/actions/registration.ts: Competition and professional training registration server actions invoking email notifications
-- app/actions/coding-classes.ts: Coding class registration server action invoking email notifications
-- app/competition/page.tsx, app/coding-classes/page.tsx, app/professional-trainings/page.tsx: Client components that trigger server actions
-- lib/supabase-admin.ts: Supabase admin client used alongside email notifications
+- app/professional-trainings/page.tsx: Client component for professional training registration form
+- supabase_migration_professional_trainings.sql: Database schema for professional training registrations
 - package.json: Dependencies including nodemailer
 
 ```mermaid
@@ -53,7 +46,7 @@ subgraph "Client Pages"
 C1["app/competition/page.tsx"]
 C2["app/coding-classes/page.tsx"]
 C3["app/professional-trainings/page.tsx"]
-C4["Admin Dashboard (Notes)"]
+C4["Admin Dashboard"]
 end
 subgraph "Server Actions"
 A1["app/actions/registration.ts"]
@@ -74,14 +67,12 @@ DB["Supabase Database"]
 STORAGE["Supabase Storage"]
 end
 C1 --> A1
-C2 --> A2
+C2 --> A1
 C3 --> A1
 C4 --> A3
 A1 --> S
-A2 --> S
 A3 --> S
 A1 --> E
-A2 --> E
 A3 --> E
 S --> DB
 A3 --> STORAGE
@@ -89,23 +80,16 @@ A3 --> STORAGE
 
 **Diagram sources**
 - [email.ts:1-237](file://lib/email.ts#L1-L237)
-- [notes.ts:1-147](file://app/actions/notes.ts#L1-L147)
-- [registration.ts:1-217](file://app/actions/registration.ts#L1-L217)
-- [coding-classes.ts:1-157](file://app/actions/coding-classes.ts#L1-L157)
-- [page.tsx (Competition):1-316](file://app/competition/page.tsx#L1-L316)
-- [page.tsx (Coding Classes):1-390](file://app/coding-classes/page.tsx#L1-L390)
+- [registration.ts:1-253](file://app/actions/registration.ts#L1-L253)
 - [page.tsx (Professional Trainings):1-400](file://app/professional-trainings/page.tsx#L1-L400)
-- [supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
+- [package.json:11-14](file://package.json#L11-L14)
 
 **Section sources**
 - [email.ts:1-237](file://lib/email.ts#L1-L237)
-- [notes.ts:1-147](file://app/actions/notes.ts#L1-L147)
-- [registration.ts:1-217](file://app/actions/registration.ts#L1-L217)
-- [coding-classes.ts:1-157](file://app/actions/coding-classes.ts#L1-L157)
-- [page.tsx (Competition):1-316](file://app/competition/page.tsx#L1-L316)
-- [page.tsx (Coding Classes):1-390](file://app/coding-classes/page.tsx#L1-L390)
+- [registration.ts:1-253](file://app/actions/registration.ts#L1-L253)
 - [page.tsx (Professional Trainings):1-400](file://app/professional-trainings/page.tsx#L1-L400)
-- [supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-L33)
 - [package.json:11-14](file://package.json#L11-L14)
 
 ## Core Components
@@ -122,12 +106,11 @@ A3 --> STORAGE
 - **Specialized Email Handlers**
   - sendCompetitionRegistrationEmail builds an HTML table with registration details and sends to ADMIN_EMAILS.
   - sendCodingClassRegistrationEmail builds a course list and payment plan mapping, then sends to ADMIN_EMAILS.
-  - **NEW**: sendENoteNotificationEmail creates rich formatted HTML emails with color-coded categories, priority indicators, tag badges, and attachment links for staff e-notes.
-  - **NEW**: sendProfessionalTrainingRegistrationEmail generates professional-looking emails with gradient styling and comprehensive participant information.
+  - sendENoteNotificationEmail creates rich formatted HTML emails with color-coded categories, priority indicators, tag badges, and attachment links for staff e-notes.
+  - **Enhanced**: sendProfessionalTrainingRegistrationEmail generates professional-looking emails with purple gradient theme, comprehensive participant information display, and interactive elements.
 
 - **Server Action Integration**
   - Registration actions insert data into Supabase and then call the appropriate email handler.
-  - Notes server actions integrate file upload functionality with email notifications.
   - Results from email sending are logged as warnings without failing the primary operation.
 
 **Section sources**
@@ -136,28 +119,24 @@ A3 --> STORAGE
 - [email.ts:88-133](file://lib/email.ts#L88-L133)
 - [email.ts:135-191](file://lib/email.ts#L135-L191)
 - [email.ts:193-236](file://lib/email.ts#L193-L236)
-- [notes.ts:79-93](file://app/actions/notes.ts#L79-L93)
 - [registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
+- [registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
 
 ## Architecture Overview
-The email service is invoked from server actions after data persistence. The flow ensures that failures in email sending do not block the primary operation (data insertion). The architecture supports both simple registration notifications and complex e-note notifications with rich formatting and file attachments.
+The email service is invoked from server actions after data persistence. The flow ensures that failures in email sending do not block the primary operation (data insertion). The architecture supports both simple registration notifications and complex professional training registrations with rich formatting and comprehensive participant information.
 
 ```mermaid
 sequenceDiagram
 participant Client as "Client Page"
 participant Action as "Server Action"
 participant DB as "Supabase Admin"
-participant Storage as "Supabase Storage"
 participant Email as "Email Service"
-Client->>Action : "Form Submit / Save Note"
+Client->>Action : "Form Submit"
 Action->>DB : "Insert Data"
 DB-->>Action : "Result"
-alt New E-Note Created
-Action->>Storage : "Upload File Attachments"
-Storage-->>Action : "File URLs"
-Action->>Email : "sendENoteNotificationEmail()"
-else Registration Form
+alt Professional Training Registration
+Action->>Email : "sendProfessionalTrainingRegistrationEmail()"
+else Competition/Coding Class Registration
 Action->>Email : "send*RegistrationEmail()"
 end
 Email-->>Action : "{ success, messageId } or { success, error }"
@@ -165,10 +144,8 @@ Action-->>Client : "Response (email result logged)"
 ```
 
 **Diagram sources**
-- [notes.ts:74-93](file://app/actions/notes.ts#L74-L93)
-- [registration.ts:45-76](file://app/actions/registration.ts#L45-L76)
-- [coding-classes.ts:40-68](file://app/actions/coding-classes.ts#L40-L68)
-- [email.ts:23-44](file://lib/email.ts#L23-L44)
+- [registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+- [email.ts:193-236](file://lib/email.ts#L193-L236)
 
 ## Detailed Component Analysis
 
@@ -239,9 +216,7 @@ ReturnRes --> Exit(["Exit"])
 **Section sources**
 - [email.ts:88-133](file://lib/email.ts#L88-L133)
 
-### E-Note Notification Email Handler (New Feature)
-**Updated** Enhanced with sophisticated HTML formatting, color-coded categories, priority indicators, tag badges, and attachment link support.
-
+### E-Note Notification Email Handler
 - Accepts a typed note object with title, content, author, category, priority, tags, and file_urls.
 - Creates rich formatted HTML with dynamic styling based on category and priority levels.
 - Supports color-coded badges: urgent (red), announcement (purple), general (green), normal (blue), high (orange).
@@ -269,25 +244,28 @@ ReturnRes --> Exit(["Exit"])
 **Section sources**
 - [email.ts:135-191](file://lib/email.ts#L135-L191)
 
-### Professional Training Registration Email Handler (New Feature)
+### Professional Training Registration Email Handler (Enhanced)
 **Updated** Features professional-grade styling with purple theme, comprehensive participant information display, and interactive elements.
 
-- Accepts a typed registration object with comprehensive professional training data.
-- Creates visually appealing HTML with purple gradient theme and professional styling.
-- Displays participant information in structured table format with contact links.
+- Accepts a typed registration object with comprehensive professional training data including full_name, email, phone, gender, date_of_birth, organization, job_title, training_program, preferred_schedule, experience_level, payment_preference, and additional_info.
+- Creates visually appealing HTML with purple gradient theme (#7c3aed) and professional styling throughout.
+- Displays participant information in structured table format with contact links (mailto: and tel: protocols).
 - Shows experience level with color-coded badges (beginner=green, intermediate=blue, advanced=purple).
-- Highlights training program selection with prominent badge styling.
-- Includes payment preference display with distinct visual treatment.
-- Provides "View in Dashboard" call-to-action with purple theme styling.
-- Uses ADMIN_EMAILS as recipients with emoji-enhanced subject line.
+- Highlights training program selection with prominent purple badge styling.
+- Includes payment preference display with distinct visual treatment using amber/yellow theme.
+- Provides "View in Dashboard" call-to-action with purple theme styling matching the overall design.
+- Uses ADMIN_EMAILS as recipients with emoji-enhanced subject line including graduation cap emoji.
+- Maintains consistency with existing email templates while introducing professional branding elements.
 
 ```mermaid
 flowchart TD
-Enter(["sendProfessionalTrainingRegistrationEmail Entry"]) --> BuildHTML["Construct professional HTML template"]
-BuildHTML --> StyleExperience["Apply experience level colors"]
-StyleExperience --> HighlightProgram["Highlight selected program"]
-HighlightProgram --> AddContactLinks["Add mailto/tel links"]
-AddContactLinks --> CallSend["Call sendEmail with ADMIN_EMAILS"]
+Enter(["sendProfessionalTrainingRegistrationEmail Entry"]) --> BuildHTML["Construct professional HTML template with purple theme"]
+BuildHTML --> StyleExperience["Apply experience level colors (green/blue/purple)"]
+StyleExperience --> HighlightProgram["Highlight selected program with purple badge"]
+HighlightProgram --> AddContactLinks["Add mailto/tel links for email and phone"]
+HighlightProgram --> StylePayment["Style payment preference with amber theme"]
+StylePayment --> AddCTA["Add purple themed dashboard CTA button"]
+AddCTA --> CallSend["Call sendEmail with ADMIN_EMAILS"]
 CallSend --> ReturnRes["Return sendEmail result"]
 ReturnRes --> Exit(["Exit"])
 ```
@@ -300,48 +278,32 @@ ReturnRes --> Exit(["Exit"])
 
 ### Server Actions and Client Integration
 - Competition registration server action inserts data into the competition registrations table and then invokes the competition email handler.
-- Coding class registration server action inserts data into the coding class registrations table and then invokes the coding class email handler.
-- **Enhanced**: Notes server action integrates file upload functionality with e-note email notifications, handling file storage and URL generation before sending rich formatted emails.
-- Professional training registration server action handles comprehensive participant data and sends professional-formatted emails.
+- **Enhanced**: Professional training registration server action handles comprehensive participant data validation and sends professional-formatted emails with purple theming.
 - All actions log email errors as warnings and still return success for the primary operation.
+- Client components provide user-friendly forms with proper validation and feedback.
 
 ```mermaid
 sequenceDiagram
-participant Page as "Client Page"
-participant Action as "Server Action"
+participant Page as "Professional Training Page"
+participant Action as "submitProfessionalTrainingRegistration"
 participant DB as "Supabase Admin"
-participant Storage as "Supabase Storage"
 participant Email as "Email Service"
-Page->>Action : "submitRegistration(formData)"
-Action->>DB : "insert into rhema_registrations"
+Page->>Action : "submitProfessionalTrainingRegistration(formData)"
+Action->>DB : "insert into rhema_professional_trainings"
 DB-->>Action : "data"
-Action->>Email : "sendCompetitionRegistrationEmail"
-Email-->>Action : "result"
-Action-->>Page : "success + logged email result"
-Page->>Action : "saveStaffNote(data)"
-Action->>DB : "insert into rhema_staff_notes"
-DB-->>Action : "data"
-Action->>Storage : "upload file attachments"
-Storage-->>Action : "file URLs"
-Action->>Email : "sendENoteNotificationEmail"
+Action->>Email : "sendProfessionalTrainingRegistrationEmail"
 Email-->>Action : "result"
 Action-->>Page : "success + logged email result"
 ```
 
 **Diagram sources**
-- [registration.ts:45-76](file://app/actions/registration.ts#L45-L76)
-- [coding-classes.ts:40-68](file://app/actions/coding-classes.ts#L40-L68)
-- [notes.ts:74-93](file://app/actions/notes.ts#L74-L93)
-- [email.ts:46-86](file://lib/email.ts#L46-L86)
-- [email.ts:88-133](file://lib/email.ts#L88-L133)
-- [email.ts:135-191](file://lib/email.ts#L135-L191)
+- [registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
+- [email.ts:193-236](file://lib/email.ts#L193-L236)
+- [page.tsx (Professional Trainings):32-64](file://app/professional-trainings/page.tsx#L32-L64)
 
 **Section sources**
 - [registration.ts:22-84](file://app/actions/registration.ts#L22-L84)
-- [coding-classes.ts:20-76](file://app/actions/coding-classes.ts#L20-L76)
-- [notes.ts:61-98](file://app/actions/notes.ts#L61-L98)
-- [page.tsx (Competition):32-64](file://app/competition/page.tsx#L32-L64)
-- [page.tsx (Coding Classes):56-86](file://app/coding-classes/page.tsx#L56-L86)
+- [registration.ts:147-207](file://app/actions/registration.ts#L147-L207)
 - [page.tsx (Professional Trainings):32-64](file://app/professional-trainings/page.tsx#L32-L64)
 
 ## Dependency Analysis
@@ -353,33 +315,25 @@ Action-->>Page : "success + logged email result"
 graph LR
 Pkg["package.json"] --> Nodemailer["@types/nodemailer / nodemailer"]
 Email["lib/email.ts"] --> Nodemailer
-Actions["app/actions/*.ts"] --> Email
+Actions["app/actions/registration.ts"] --> Email
 Actions --> Supabase["lib/supabase-admin.ts"]
 Actions --> NextCache["Next.js Cache Revalidation"]
-Notes["app/actions/notes.ts"] --> Storage["Supabase Storage"]
 ```
 
 **Diagram sources**
 - [package.json:11-14](file://package.json#L11-L14)
 - [email.ts:1](file://lib/email.ts#L1)
 - [registration.ts:3-4](file://app/actions/registration.ts#L3-L4)
-- [coding-classes.ts:3-5](file://app/actions/coding-classes.ts#L3-L5)
-- [notes.ts:3-6](file://app/actions/notes.ts#L3-L6)
-- [supabase-admin.ts:1](file://lib/supabase-admin.ts#L1)
 
 **Section sources**
 - [package.json:11-14](file://package.json#L11-L14)
 - [email.ts:1](file://lib/email.ts#L1)
 - [registration.ts:3-4](file://app/actions/registration.ts#L3-L4)
-- [coding-classes.ts:3-5](file://app/actions/coding-classes.ts#L3-L5)
-- [notes.ts:3-6](file://app/actions/notes.ts#L3-L6)
-- [supabase-admin.ts:1](file://lib/supabase-admin.ts#L1)
 
 ## Performance Considerations
 - Asynchronous email sending: All email functions are async and use promises, avoiding blocking the main thread.
 - Minimal overhead: Email sending occurs after data persistence, ensuring the primary operation completes first.
 - Logging: Console logs provide visibility into success and error outcomes without impacting performance significantly.
-- File Upload Optimization: E-note notifications handle file uploads separately before sending emails, preventing large payloads in email requests.
 - Recommendations:
   - Introduce retry logic with exponential backoff for transient failures.
   - Add circuit breaker behavior to temporarily halt email sending during sustained failures.
@@ -400,35 +354,28 @@ Common issues and resolutions:
 
 - Server action continues despite email failure
   - Behavior: Email failures are logged as warnings; registration remains successful.
-  - Reference: [registration.ts:72-76](file://app/actions/registration.ts#L72-L76), [coding-classes.ts:64-68](file://app/actions/coding-classes.ts#L64-L68), [notes.ts:90-93](file://app/actions/notes.ts#L90-L93)
+  - Reference: [registration.ts:72-76](file://app/actions/registration.ts#L72-L76), [registration.ts:195-199](file://app/actions/registration.ts#L195-L199)
 
 - Recipient management
   - ADMIN_EMAILS is centralized; modify to add or remove recipients.
   - Reference: [email.ts:14](file://lib/email.ts#L14)
 
-- E-note specific issues
-  - File upload failures: Check Supabase storage permissions and bucket configuration.
-  - Rich formatting problems: Verify HTML rendering compatibility across email clients.
-  - Attachment link access: Ensure public URLs are properly generated and accessible.
-  - Reference: [notes.ts:114-133](file://app/actions/notes.ts#L114-L133)
-
 - Professional training registration issues
   - Form validation errors: Check required fields and data type matching.
-  - Email template rendering: Verify special characters and long text handling.
-  - Reference: [registration.ts:195-199](file://app/actions/registration.ts#L195-L199)
+  - Email template rendering: Verify special characters and long text handling in purple-themed emails.
+  - Database schema mismatch: Ensure rhema_professional_trainings table exists with correct columns.
+  - Reference: [registration.ts:165-167](file://app/actions/registration.ts#L165-167), [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-33)
 
 **Section sources**
 - [email.ts:24-26](file://lib/email.ts#L24-L26)
 - [email.ts:40-43](file://lib/email.ts#L40-L43)
 - [registration.ts:72-76](file://app/actions/registration.ts#L72-L76)
-- [coding-classes.ts:64-68](file://app/actions/coding-classes.ts#L64-L68)
-- [notes.ts:90-93](file://app/actions/notes.ts#L90-L93)
-- [notes.ts:114-133](file://app/actions/notes.ts#L114-L133)
 - [registration.ts:195-199](file://app/actions/registration.ts#L195-L199)
 - [email.ts:14](file://lib/email.ts#L14)
+- [supabase_migration_professional_trainings.sql:1-33](file://supabase_migration_professional_trainings.sql#L1-33)
 
 ## Conclusion
-The email service is a comprehensive, modular component built on Nodemailer with clear separation of concerns. It provides a generic sendEmail function and specialized handlers for various notification types including competition registrations, coding class enrollments, staff e-notes with rich formatting, and professional training registrations. The service integrates cleanly with server actions, gracefully handles missing or failing configurations, and maintains robust error handling while preserving primary operation success. The recent enhancements with e-note notifications demonstrate the service's extensibility and ability to handle complex, richly-formatted email requirements.
+The email service is a comprehensive, modular component built on Nodemailer with clear separation of concerns. It provides a generic sendEmail function and specialized handlers for various notification types including competition registrations, coding class enrollments, staff e-notes with rich formatting, and professional training registrations with purple-themed styling. The service integrates cleanly with server actions, gracefully handles missing or failing configurations, and maintains robust error handling while preserving primary operation success. The recent enhancements with professional training registration demonstrate the service's extensibility and ability to handle complex, professionally-branded email requirements.
 
 ## Appendices
 
@@ -460,13 +407,13 @@ The email service is a comprehensive, modular component built on Nodemailer with
   - Modify HTML strings within handlers to adjust styles, sections, or data inclusion.
   - Keep HTML self-contained within the handler for portability.
   - Use CSS-in-JS patterns for consistent styling across email templates.
-  - Reference: [email.ts:61-79](file://lib/email.ts#L61-L79), [email.ts:108-126](file://lib/email.ts#L108-L126), [email.ts:167-184](file://lib/email.ts#L167-L184)
+  - Reference: [email.ts:61-79](file://lib/email.ts#L61-L79), [email.ts:108-126](file://lib/email.ts#L108-L126), [email.ts:167-184](file://lib/email.ts#L167-L184), [email.ts:207-229](file://lib/email.ts#L207-L229)
 
 - Integrating with Additional Notification Types
   - Follow the pattern: server action persists data → call email handler → log result.
   - Handle file uploads separately for attachment-heavy notifications.
   - Implement proper error handling that doesn't block primary operations.
-  - Reference: [registration.ts:72-76](file://app/actions/registration.ts#L72-L76), [coding-classes.ts:64-68](file://app/actions/coding-classes.ts#L64-L68), [notes.ts:79-93](file://app/actions/notes.ts#L79-L93)
+  - Reference: [registration.ts:72-76](file://app/actions/registration.ts#L72-L76), [registration.ts:195-199](file://app/actions/registration.ts#L195-L199)
 
 ### Security Considerations
 - Credentials
@@ -484,18 +431,13 @@ The email service is a comprehensive, modular component built on Nodemailer with
   - Implement delivery tracking and bounce handling for critical notifications.
   - Reference: [email.ts:38](file://lib/email.ts#L38)
 
-- File Upload Security
-  - Validate file types and sizes before storage.
-  - Sanitize file names and paths to prevent directory traversal attacks.
-  - Implement access controls for stored files.
-  - Reference: [notes.ts:114-133](file://app/actions/notes.ts#L114-L133)
-
 ### Advanced Features
 - Rich HTML Formatting
   - Support for inline CSS styling and responsive design patterns.
   - Color-coded status indicators and badge systems.
   - Interactive elements like buttons and links.
-  - Reference: [email.ts:167-184](file://lib/email.ts#L167-L184)
+  - Purple-themed professional branding for training notifications.
+  - Reference: [email.ts:167-184](file://lib/email.ts#L167-L184), [email.ts:207-229](file://lib/email.ts#L207-L229)
 
 - Dynamic Content Generation
   - Conditional rendering based on data availability.
@@ -507,4 +449,4 @@ The email service is a comprehensive, modular component built on Nodemailer with
   - Async/await patterns for non-blocking email operations.
   - Error boundaries and fallback behaviors.
   - Logging and monitoring integration points.
-  - Reference: [notes.ts:80-93](file://app/actions/notes.ts#L80-L93)
+  - Reference: [registration.ts:195-199](file://app/actions/registration.ts#L195-L199)

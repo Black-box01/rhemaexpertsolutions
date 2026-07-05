@@ -19,13 +19,12 @@
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive Staff E-Notes tab functionality with modal-based interface
-- Implemented drag-and-drop file upload support with real-time progress indicators
-- Enhanced form validation for note creation and editing
-- Integrated email notifications for new staff notes
-- Added advanced filtering and search capabilities for staff notes
-- Implemented pagination for large note collections
-- Added file attachment management with storage bucket integration
+- Enhanced Professional Trainings tab with complete table view implementation
+- Added comprehensive registration management with status dropdown selectors
+- Implemented modal dialog for detailed professional training registration information
+- Integrated color-coded status indicators with inline editing capabilities
+- Added deletion functionality for professional training registrations
+- Enhanced data visualization with responsive table layout and filtering options
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,13 +32,14 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Staff Notes Management System](#staff-notes-management-system)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Security and Access Control](#security-and-access-control)
-10. [Administrative Workflows](#administrative-workflows)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Conclusion](#conclusion)
+6. [Professional Trainings Management System](#professional-trainings-management-system)
+7. [Staff Notes Management System](#staff-notes-management-system)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Security and Access Control](#security-and-access-control)
+11. [Administrative Workflows](#administrative-workflows)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+13. [Conclusion](#conclusion)
 
 ## Introduction
 This document provides comprehensive documentation for the administrative interface of Rhema Expert Solutions. It covers the admin login and authentication flow, protected routes, session management, and the admin dashboard. The dashboard enables administrators to manage services, clients, team members, competitions, newsletter posts, general settings, student registrations for competitions and coding classes, professional trainings, and internal staff notes with advanced file attachment capabilities. It also documents the integration with server actions for data manipulation, the underlying Supabase schema, and operational guidelines for security, monitoring, and performance.
@@ -98,10 +98,10 @@ SupabaseAdmin --> NotesSchema
 
 **Diagram sources**
 - [app/admin/page.tsx:1-52](file://app/admin/page.tsx#L1-L52)
-- [app/admin/dashboard/page.tsx:1-1830](file://app/admin/dashboard/page.tsx#L1-L1830)
+- [app/admin/dashboard/page.tsx:1-1911](file://app/admin/dashboard/page.tsx#L1-L1911)
 - [app/actions/auth.ts:1-55](file://app/actions/auth.ts#L1-L55)
 - [app/actions/admin.ts:1-198](file://app/actions/admin.ts#L1-L198)
-- [app/actions/registration.ts:1-131](file://app/actions/registration.ts#L1-L131)
+- [app/actions/registration.ts:1-253](file://app/actions/registration.ts#L1-L253)
 - [app/actions/coding-classes.ts:1-157](file://app/actions/coding-classes.ts#L1-L157)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-L147)
 - [lib/supabase-admin.ts:1-19](file://lib/supabase-admin.ts#L1-L19)
@@ -113,7 +113,7 @@ SupabaseAdmin --> NotesSchema
 
 **Section sources**
 - [app/admin/page.tsx:1-52](file://app/admin/page.tsx#L1-L52)
-- [app/admin/dashboard/page.tsx:1-1830](file://app/admin/dashboard/page.tsx#L1-L1830)
+- [app/admin/dashboard/page.tsx:1-1911](file://app/admin/dashboard/page.tsx#L1-L1911)
 - [app/actions/auth.ts:1-55](file://app/actions/auth.ts#L1-L55)
 - [app/actions/admin.ts:1-198](file://app/actions/admin.ts#L1-L198)
 - [app/actions/notes.ts:1-147](file://app/actions/notes.ts#L1-L147)
@@ -132,7 +132,7 @@ SupabaseAdmin --> NotesSchema
 
 **Section sources**
 - [app/admin/page.tsx:7-51](file://app/admin/page.tsx#L7-L51)
-- [app/admin/dashboard/page.tsx:28-1829](file://app/admin/dashboard/page.tsx#L28-L1829)
+- [app/admin/dashboard/page.tsx:28-1910](file://app/admin/dashboard/page.tsx#L28-L1910)
 - [app/actions/admin.ts:21-197](file://app/actions/admin.ts#L21-L197)
 - [app/actions/notes.ts:61-112](file://app/actions/notes.ts#L61-L112)
 - [lib/supabase-admin.ts:3-18](file://lib/supabase-admin.ts#L3-L18)
@@ -237,7 +237,7 @@ end
   - General Settings: Edit site content settings.
   - Competition Registrations: View, edit, and delete registration records.
   - Coding Class Registrations: View, edit, update status, and delete records.
-  - Professional Trainings: Manage professional training registrations.
+  - Professional Trainings: Complete table view with status management, detailed information modal, and deletion capabilities.
   - Staff E-Notes: Internal note-taking with categories, priorities, statuses, tags, and file attachments.
 - Modals: Unified modal for adding/editing items across most sections; separate modals for viewing/editing registrations and staff notes.
 - Data Fetching: On mount, fetches dashboard data and dependent registration lists; supports pagination and filtering for staff notes.
@@ -268,6 +268,7 @@ class AdminDashboard {
 +handleDeleteNote(id)
 +handleNoteFileUpload(file)
 +handleDragDrop(files)
++fetchProfessionalTrainingsData()
 }
 class ServerActions {
 +saveService(data)
@@ -286,6 +287,9 @@ class ServerActions {
 +updateCodingClassStatus(id, status)
 +updateCodingClassRegistration(id, data)
 +deleteCodingClassRegistration(id)
++fetchProfessionalTrainings()
++updateProfessionalTraining(id, data)
++deleteProfessionalTraining(id)
 +fetchStaffNotes(filters)
 +saveStaffNote(data)
 +deleteStaffNote(id)
@@ -295,16 +299,16 @@ AdminDashboard --> ServerActions : "invokes"
 ```
 
 **Diagram sources**
-- [app/admin/dashboard/page.tsx:28-1829](file://app/admin/dashboard/page.tsx#L28-L1829)
+- [app/admin/dashboard/page.tsx:28-1910](file://app/admin/dashboard/page.tsx#L28-L1910)
 - [app/actions/admin.ts:21-197](file://app/actions/admin.ts#L21-L197)
-- [app/actions/registration.ts:86-130](file://app/actions/registration.ts#L86-L130)
+- [app/actions/registration.ts:86-252](file://app/actions/registration.ts#L86-L252)
 - [app/actions/coding-classes.ts:78-156](file://app/actions/coding-classes.ts#L78-L156)
 - [app/actions/notes.ts:20-147](file://app/actions/notes.ts#L20-L147)
 
 **Section sources**
-- [app/admin/dashboard/page.tsx:1200-1829](file://app/admin/dashboard/page.tsx#L1200-L1829)
+- [app/admin/dashboard/page.tsx:1200-1910](file://app/admin/dashboard/page.tsx#L1200-L1910)
 - [app/actions/admin.ts:38-98](file://app/actions/admin.ts#L38-L98)
-- [app/actions/registration.ts:86-130](file://app/actions/registration.ts#L86-L130)
+- [app/actions/registration.ts:86-252](file://app/actions/registration.ts#L86-L252)
 - [app/actions/coding-classes.ts:78-156](file://app/actions/coding-classes.ts#L78-L156)
 - [app/actions/notes.ts:20-147](file://app/actions/notes.ts#L20-L147)
 
@@ -336,7 +340,7 @@ Refresh --> End
 ### Student Enrollment Tracking
 - Competition Registrations: View student details, school info, parent contact, and status; edit or delete records; open detailed modal for comprehensive editing.
 - Coding Class Registrations: View student profile, selected courses, payment plans, experience level, preferred start date, and status; update status directly from the table.
-- Professional Training Registrations: Manage professional training participant information and status updates.
+- Professional Training Registrations: Complete table view with participant information, training program details, schedule preferences, experience levels, and inline status management with color-coded indicators.
 
 ```mermaid
 sequenceDiagram
@@ -363,26 +367,30 @@ TrainingAction-->>Dashboard : {success : true}
 - [app/admin/dashboard/page.tsx:257-292](file://app/admin/dashboard/page.tsx#L257-L292)
 - [app/actions/registration.ts:102-115](file://app/actions/registration.ts#L102-L115)
 - [app/actions/coding-classes.ts:98-116](file://app/actions/coding-classes.ts#L98-L116)
+- [app/actions/registration.ts:224-236](file://app/actions/registration.ts#L224-L236)
 
 **Section sources**
-- [app/admin/dashboard/page.tsx:1375-1541](file://app/admin/dashboard/page.tsx#L1375-L1541)
+- [app/admin/dashboard/page.tsx:1375-1905](file://app/admin/dashboard/page.tsx#L1375-L1905)
 - [app/actions/registration.ts:102-115](file://app/actions/registration.ts#L102-L115)
 - [app/actions/coding-classes.ts:98-116](file://app/actions/coding-classes.ts#L98-L116)
+- [app/actions/registration.ts:224-236](file://app/actions/registration.ts#L224-L236)
 
 ### Administrative Reporting Capabilities
 - Registration Reports: Comprehensive tables for competition, coding class, and professional training registrations with sorting and filtering.
+- Professional Training Reports: Enhanced table view with inline status management, detailed information modal, and comprehensive participant tracking.
 - Staff E-Notes: Paginated list with search and filters by status, category, and priority; supports pinning and file attachments.
 
 **Section sources**
-- [app/admin/dashboard/page.tsx:1375-1823](file://app/admin/dashboard/page.tsx#L1375-L1823)
+- [app/admin/dashboard/page.tsx:1375-1905](file://app/admin/dashboard/page.tsx#L1375-L1905)
 
 ### Dashboard Layout and Data Visualization
 - Layout: Responsive two-column design with a sidebar navigation and main content area.
 - Visual Indicators: Color-coded status badges for registration records; category/priority tags for staff notes; pinned notes highlighted with yellow background.
 - Interactive Elements: Inline status updates for coding class and professional training registrations; modal-based editing for all content types.
+- Professional Training Enhancements: Complete table view with responsive design, color-coded status indicators, and comprehensive action buttons.
 
 **Section sources**
-- [app/admin/dashboard/page.tsx:1193-1829](file://app/admin/dashboard/page.tsx#L1193-L1829)
+- [app/admin/dashboard/page.tsx:1193-1910](file://app/admin/dashboard/page.tsx#L1193-L1910)
 
 ### Integration Between Admin Pages and Server Actions
 - Data Manipulation: All modifications are performed via server actions that validate authentication and interact with Supabase using the admin client.
@@ -394,6 +402,127 @@ TrainingAction-->>Dashboard : {success : true}
 - [app/actions/notes.ts:79-94](file://app/actions/notes.ts#L79-L94)
 - [lib/email.ts:134-191](file://lib/email.ts#L134-L191)
 - [app/admin/dashboard/page.tsx:212-216](file://app/admin/dashboard/page.tsx#L212-L216)
+
+## Professional Trainings Management System
+
+### Overview
+The Professional Trainings tab provides a comprehensive management interface for professional training program registrations. It features a complete table view with inline status management, detailed information modal, and full CRUD operations integrated seamlessly with the existing dashboard architecture.
+
+### Core Features
+
+#### Complete Table View Implementation
+- **Responsive Design**: Fully responsive table layout optimized for various screen sizes
+- **Comprehensive Data Display**: Shows participant name, email, phone, training program, preferred schedule, experience level, and status
+- **Organization Information**: Displays organization details when available for each participant
+- **Training Program Badges**: Color-coded purple badges for training program identification
+- **Experience Level Indicators**: Color-coded badges showing beginner (green), intermediate (blue), and advanced (purple) levels
+
+#### Inline Status Management
+- **Color-Coded Dropdown Selectors**: Status dropdowns with dynamic color coding based on current status
+- **Real-time Updates**: Immediate status updates without page refresh
+- **Visual Feedback**: Clear visual distinction between different status states (pending, contacted, enrolled, cancelled)
+- **Seamless Integration**: Status updates integrate with existing dashboard revalidation system
+
+#### Detailed Information Modal
+- **Comprehensive Participant Details**: Full participant information including personal details, organizational context, and training preferences
+- **Rich Data Presentation**: Well-organized grid layout with labeled fields and formatted dates
+- **Training Program Highlighting**: Prominent display of selected training program with purple badge styling
+- **Experience Level Visualization**: Color-coded experience level badges for quick assessment
+- **Payment Preference Display**: Clear indication of payment method preferences
+
+#### Advanced Management Capabilities
+- **Deletion Functionality**: Safe deletion with confirmation prompts
+- **View and Edit Options**: Comprehensive action buttons for each registration record
+- **Empty State Handling**: User-friendly messaging when no registrations exist
+- **Total Count Display**: Live count of total professional training registrations
+
+```mermaid
+flowchart TD
+LoadTab["Load Professional Trainings Tab"] --> FetchData["fetchProfessionalTrainings()"]
+FetchData --> DisplayTable["Display Complete Table View"]
+DisplayTable --> StatusUpdate["Inline Status Update"]
+DisplayTable --> ViewDetails["View Detailed Information"]
+DisplayTable --> DeleteRecord["Delete Registration"]
+StatusUpdate --> UpdateDB["updateProfessionalTraining()"]
+ViewDetails --> OpenModal["Open Detail Modal"]
+DeleteRecord --> ConfirmDelete["Confirm Deletion"]
+ConfirmDelete --> DeleteDB["deleteProfessionalTraining()"]
+UpdateDB --> Revalidate["Revalidate Data"]
+DeleteDB --> Revalidate
+Revalidate --> RefreshTable["Refresh Table View"]
+```
+
+**Diagram sources**
+- [app/admin/dashboard/page.tsx:92-97](file://app/admin/dashboard/page.tsx#L92-L97)
+- [app/admin/dashboard/page.tsx:1792-1905](file://app/admin/dashboard/page.tsx#L1792-L1905)
+- [app/actions/registration.ts:209-252](file://app/actions/registration.ts#L209-L252)
+
+### Database Schema Integration
+The professional training system integrates with the existing `rhema_professional_trainings` table through comprehensive server actions:
+
+```mermaid
+erDiagram
+RHHEMA_PROFESSIONAL_TRAININGS {
+uuid id PK
+timestamptz created_at
+timestamptz updated_at
+text full_name
+text email
+text phone
+text gender
+date date_of_birth
+text organization
+text job_title
+text training_program
+text preferred_schedule
+text experience_level
+text payment_preference
+text additional_info
+text status
+}
+```
+
+**Diagram sources**
+- [types/supabase.ts:114-131](file://types/supabase.ts#L114-L131)
+
+### Email Notifications
+When new professional training registrations are submitted, automated email notifications are sent to administrators with:
+- Complete participant information including name, email, phone, and organizational details
+- Training program specifics and scheduling preferences
+- Experience level and payment preference information
+- Rich HTML formatting for professional presentation
+
+**Section sources**
+- [app/actions/registration.ts:195-199](file://app/actions/registration.ts#L195-L199)
+- [lib/email.ts:134-191](file://lib/email.ts#L134-L191)
+
+### User Interface Components
+
+#### Professional Training Table Interface
+The professional training table provides a comprehensive management interface:
+- **Responsive Header**: Clear section title with total count badge
+- **Structured Column Layout**: Organized columns for all essential participant information
+- **Interactive Status Management**: Inline dropdown selectors with color-coded feedback
+- **Action Buttons**: Consistent View and Delete buttons for each record
+- **Empty State Handling**: Friendly messaging when no registrations exist
+
+#### Detail Modal Interface
+The detail modal offers comprehensive participant information:
+- **Grid Layout**: Two-column layout for efficient information display
+- **Rich Data Formatting**: Properly formatted dates, structured text, and visual badges
+- **Training Program Emphasis**: Prominent display of selected training programs
+- **Experience Level Visualization**: Color-coded badges for quick assessment
+- **Organizational Context**: Clear display of company and job title information
+
+#### Status Management System
+- **Dynamic Color Coding**: Automatic color changes based on status values
+- **Inline Editing**: No modal required for simple status updates
+- **Real-time Feedback**: Immediate visual confirmation of status changes
+- **Consistent Styling**: Matches overall dashboard design language
+
+**Section sources**
+- [app/admin/dashboard/page.tsx:1792-1905](file://app/admin/dashboard/page.tsx#L1792-L1905)
+- [app/admin/dashboard/page.tsx:798-878](file://app/admin/dashboard/page.tsx#L798-L878)
 
 ## Staff Notes Management System
 
@@ -522,7 +651,7 @@ The note modal provides a comprehensive interface for managing staff notes:
 
 **Section sources**
 - [app/admin/dashboard/page.tsx:921-1191](file://app/admin/dashboard/page.tsx#L921-L1191)
-- [app/admin/dashboard/page.tsx:1543-1709](file://app/admin/dashboard/page.tsx#L1543-L1709)
+- [app/admin/dashboard/page.tsx:1624-1789](file://app/admin/dashboard/page.tsx#L1624-L1789)
 
 ## Dependency Analysis
 The admin interface exhibits clear separation of concerns:
@@ -579,6 +708,7 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
 - Revalidation Strategy: Mutations trigger targeted revalidation to keep the UI fresh without full-page reloads.
 - Pagination: Staff notes support pagination to manage large lists efficiently.
 - File Upload Optimization: Sequential file processing with individual progress tracking prevents UI blocking.
+- Professional Training Enhancements: Optimized table rendering with efficient state management and minimal re-renders.
 - Recommendations:
   - Consider caching strategies for frequently accessed static content.
   - Implement virtualized lists for very large registration tables.
@@ -606,7 +736,7 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
 - [app/actions/auth.ts:45-54](file://app/actions/auth.ts#L45-L54)
 - [app/actions/notes.ts:35-36](file://app/actions/notes.ts#L35-L36)
 - [lib/supabase-admin.ts:7-9](file://lib/supabase-admin.ts#L7-L9)
-- [supabase_schema.sql:20-32](file://supabase_schema.sql#L20-L32)
+- [supabase_schema.sql:20-32](file://supabase_schema.sql#L20-32)
 - [supabase_migration_add_coding_classes.sql:18-29](file://supabase_migration_add_coding_classes.sql#L18-L29)
 - [supabase_migration_add_staff_notes.sql:23-44](file://supabase_migration_add_staff_notes.sql#L23-L44)
 
@@ -618,6 +748,11 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
 - System Monitoring:
   - Monitor new registrations via email notifications and track progress in the dashboard tables.
   - Use staff notes for internal coordination and announcements with file attachments.
+- Professional Training Management:
+  - Monitor professional training registrations with comprehensive table view
+  - Update participant status through inline dropdown selectors
+  - View detailed participant information through modal dialogs
+  - Manage training program enrollments and cancellations
 - Staff Communication:
   - Create categorized and prioritized notes for different audiences.
   - Pin important announcements for immediate visibility.
@@ -627,7 +762,8 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
 **Section sources**
 - [app/actions/admin.ts:65-81](file://app/actions/admin.ts#L65-L81)
 - [lib/email.ts:14-237](file://lib/email.ts#L14-L237)
-- [app/admin/dashboard/page.tsx:1543-1709](file://app/admin/dashboard/page.tsx#L1543-L1709)
+- [app/admin/dashboard/page.tsx:1624-1789](file://app/admin/dashboard/page.tsx#L1624-L1789)
+- [app/admin/dashboard/page.tsx:1792-1905](file://app/admin/dashboard/page.tsx#L1792-L1905)
 
 ## Troubleshooting Guide
 - Login Issues:
@@ -645,6 +781,10 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
   - Verify storage bucket permissions for file uploads.
   - Check file size limits and supported formats.
   - Ensure proper indexing for search and filter operations.
+- Professional Training Issues:
+  - Verify database connectivity for professional training table operations.
+  - Check server action responses for status update failures.
+  - Ensure proper type definitions for professional training data structures.
 - File Upload Problems:
   - Confirm storage bucket exists and has correct policies.
   - Check file format compatibility and size constraints.
@@ -658,4 +798,4 @@ SupabaseAdmin --> NotesSchema["supabase_migration_add_staff_notes.sql"]
 - [app/actions/notes.ts:114-133](file://app/actions/notes.ts#L114-L133)
 
 ## Conclusion
-The Rhema Expert Solutions admin interface provides a robust, secure, and efficient management platform with extensive enhancements for staff communication and collaboration. The newly integrated Staff E-Notes system offers a comprehensive solution for internal communication with advanced features including file attachments, rich metadata, and sophisticated filtering capabilities. The implementation leverages Next.js server actions for safe data operations, Supabase for backend persistence with RLS, and a well-structured dashboard for content and registration management. The system emphasizes security through session cookies, authentication guards, and controlled admin privileges, while offering practical tools for course administration, enrollment tracking, and internal communication via staff notes with file sharing capabilities.
+The Rhema Expert Solutions admin interface provides a robust, secure, and efficient management platform with extensive enhancements for professional training management and staff communication. The newly enhanced Professional Trainings tab offers a comprehensive solution for managing professional training program registrations with complete table view, inline status management, detailed information modal, and seamless integration with the existing dashboard architecture. The implementation leverages Next.js server actions for safe data operations, Supabase for backend persistence with RLS, and a well-structured dashboard for content and registration management. The system emphasizes security through session cookies, authentication guards, and controlled admin privileges, while offering practical tools for course administration, enrollment tracking, professional training management, and internal communication via staff notes with file sharing capabilities. The enhanced Professional Trainings functionality demonstrates the system's scalability and ability to accommodate complex administrative workflows with intuitive user interfaces.
