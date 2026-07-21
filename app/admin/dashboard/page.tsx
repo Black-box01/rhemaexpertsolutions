@@ -1890,7 +1890,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      {/* Action Buttonss */}
+                      {/* Action Buttons */}
                       <div className="flex gap-2 pt-3 border-t border-gray-100">
                         <button 
                           onClick={() => openRegModal(reg, false)} 
