@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { RhemaService, RhemaClient, RhemaTeam, RhemaCompetition, RhemaNewsletter, RhemaContent, RhemaRegistration, RhemaCodingClassRegistration, RhemaStaffNote, RhemaProfessionalTraining } from '@/types/supabase';
 import { checkAuth, logout } from '@/app/actions/auth';
@@ -67,6 +67,22 @@ export default function AdminDashboard() {
   const [noteFormData, setNoteFormData] = useState<Partial<RhemaStaffNote>>({});
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  
+  // Search and filter states
+  const [servicesSearch, setServicesSearch] = useState('');
+  const [clientsSearch, setClientsSearch] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
+  const [competitionsSearch, setCompetitionsSearch] = useState('');
+  const [registrationsSearch, setRegistrationsSearch] = useState('');
+  const [registrationsFilterStatus, setRegistrationsFilterStatus] = useState('');
+  const [codingClassesSearch, setCodingClassesSearch] = useState('');
+  const [codingClassesFilterStatus, setCodingClassesFilterStatus] = useState('');
+  const [professionalTrainingsSearch, setProfessionalTrainingsSearch] = useState('');
+  const [professionalTrainingsFilterStatus, setProfessionalTrainingsFilterStatus] = useState('');
+  const [professionalTrainingsFilterProgram, setProfessionalTrainingsFilterProgram] = useState('');
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -94,6 +110,70 @@ export default function AdminDashboard() {
     if (result.success) {
       setProfessionalTrainings(result.data as RhemaProfessionalTraining[]);
     }
+  };
+
+  // Filtered data arrays
+  const filteredServices = useMemo(() => 
+    services.filter(service => 
+      service.title.toLowerCase().includes(servicesSearch.toLowerCase()) ||
+      service.description.toLowerCase().includes(servicesSearch.toLowerCase())
+    ), [services, servicesSearch]);
+
+  const filteredClients = useMemo(() => 
+    clients.filter(client => 
+      client.name.toLowerCase().includes(clientsSearch.toLowerCase())
+    ), [clients, clientsSearch]);
+
+  const filteredTeam = useMemo(() => 
+    team.filter(member => 
+      member.name.toLowerCase().includes(teamSearch.toLowerCase()) ||
+      (member.role && member.role.toLowerCase().includes(teamSearch.toLowerCase()))
+    ), [team, teamSearch]);
+
+  const filteredCompetitions = useMemo(() => 
+    competitions.filter(comp => 
+      comp.title.toLowerCase().includes(competitionsSearch.toLowerCase())
+    ), [competitions, competitionsSearch]);
+
+  const filteredRegistrations = useMemo(() => 
+    registrations.filter(reg => 
+      reg.full_name.toLowerCase().includes(registrationsSearch.toLowerCase()) ||
+      (reg.parent_email && reg.parent_email.toLowerCase().includes(registrationsSearch.toLowerCase())) ||
+      reg.parent_phone.includes(registrationsSearch)
+    ).filter(reg => !registrationsFilterStatus || reg.status === registrationsFilterStatus)
+    , [registrations, registrationsSearch, registrationsFilterStatus]);
+
+  const filteredCodingClasses = useMemo(() => 
+    codingClassRegistrations.filter(reg => 
+      reg.full_name.toLowerCase().includes(codingClassesSearch.toLowerCase()) ||
+      (reg.email && reg.email.toLowerCase().includes(codingClassesSearch.toLowerCase())) ||
+      reg.phone.includes(codingClassesSearch)
+    ).filter(reg => !codingClassesFilterStatus || reg.status === codingClassesFilterStatus)
+    , [codingClassRegistrations, codingClassesSearch, codingClassesFilterStatus]);
+
+  const filteredProfessionalTrainings = useMemo(() => 
+    professionalTrainings.filter(training => 
+      training.full_name.toLowerCase().includes(professionalTrainingsSearch.toLowerCase()) ||
+      training.email.toLowerCase().includes(professionalTrainingsSearch.toLowerCase()) ||
+      training.phone.includes(professionalTrainingsSearch) ||
+      training.training_program.toLowerCase().includes(professionalTrainingsSearch.toLowerCase())
+    ).filter(training => !professionalTrainingsFilterStatus || training.status === professionalTrainingsFilterStatus)
+     .filter(training => !professionalTrainingsFilterProgram || training.training_program === professionalTrainingsFilterProgram)
+    , [professionalTrainings, professionalTrainingsSearch, professionalTrainingsFilterStatus, professionalTrainingsFilterProgram]);
+
+  // Notification helper
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000); // Auto-hide after 5 seconds
+  };
+
+  // Confirmation dialog helper
+  const showConfirmDialog = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmDialog({ isOpen: true, title, message, onConfirm });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(null);
   };
 
   const fetchData = async () => {
@@ -168,48 +248,49 @@ export default function AdminDashboard() {
     if (activeTab === 'services') {
       const title = (formData.title || '') as string;
       const description = (formData.description || '') as string;
-      if (!title || !description) return alert('Please fill in all fields');
+      if (!title || !description) return showNotification('error', 'Please fill in all fields');
       result = await saveService({ id: editingItem?.id, title, description });
-      if (result.error) alert('Error saving service: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving service: ' + result.error);
       
     } else if (activeTab === 'clients') {
       const name = (formData.name || '') as string;
-      if (!name) return alert('Please fill in all fields');
+      if (!name) return showNotification('error', 'Please fill in all fields');
       result = await saveClient({ id: editingItem?.id, name });
-      if (result.error) alert('Error saving client: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving client: ' + result.error);
       
     } else if (activeTab === 'team') {
       const name = (formData.name || '') as string;
       const role = (formData.role || '') as string;
-      if (!name || !role) return alert('Please fill in all fields');
+      if (!name || !role) return showNotification('error', 'Please fill in all fields');
       result = await saveTeam({ id: editingItem?.id, name, role });
-      if (result.error) alert('Error saving team member: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving team member: ' + result.error);
       
     } else if (activeTab === 'competitions') {
       const title = (formData.title || '') as string;
       const description = (formData.description || '') as string;
       const registration_link = (formData.registration_link || '') as string;
-      if (!title || !description) return alert('Please fill in all fields');
+      if (!title || !description) return showNotification('error', 'Please fill in all fields');
       result = await saveCompetition({ id: editingItem?.id, title, description, registration_link });
-      if (result.error) alert('Error saving competition: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving competition: ' + result.error);
       
     } else if (activeTab === 'newsletter') {
       const title = (formData.title || '') as string;
       const content = (formData.content || '') as string;
-      if (!title || !content) return alert('Please fill in all fields');
+      if (!title || !content) return showNotification('error', 'Please fill in all fields');
       result = await saveNewsletter({ id: editingItem?.id, title, content });
-      if (result.error) alert('Error saving newsletter: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving newsletter: ' + result.error);
       
     } else if (activeTab === 'settings') {
       const value = (formData.value || '') as string;
       const id = editingItem?.id;
-      if (!value) return alert('Please enter a value');
-      if (!id) return alert('Missing setting id');
+      if (!value) return showNotification('error', 'Please enter a value');
+      if (!id) return showNotification('error', 'Missing setting id');
       result = await saveSetting({ id, value });
-      if (result.error) alert('Error saving setting: ' + result.error);
+      if (result.error) showNotification('error', 'Error saving setting: ' + result.error);
     }
 
     if (result && !result.error) {
+      showNotification('success', `${editingItem ? 'Updated' : 'Added'} ${activeTab === 'settings' ? 'setting' : activeTab.slice(0, -1)} successfully!`);
       closeModal();
       fetchData(); // Refresh data to see changes immediately
     }
@@ -217,21 +298,31 @@ export default function AdminDashboard() {
 
   // Generic delete function
   const handleDelete = async (table: string, id: string, refresh: () => void) => {
-    if (confirm('Are you sure you want to delete this item?')) {
-      const result = await deleteItem(table, id);
-      if (result.error) alert('Error deleting item: ' + result.error);
-      else refresh(); // We can also call fetchData() here, but refresh usually does that in this context? 
-      // Actually refresh param is usually fetchData passed down? No, it's used as callback.
-      // Let's explicitly call fetchData() instead of relying on the callback which might be stale
-      fetchData();
-    }
+    showConfirmDialog(
+      'Delete Item',
+      'Are you sure you want to delete this item? This action cannot be undone.',
+      async () => {
+        const result = await deleteItem(table, id);
+        if (result.error) {
+          showNotification('error', 'Error deleting item: ' + result.error);
+        } else {
+          showNotification('success', 'Deleted successfully!');
+          refresh();
+          fetchData();
+        }
+        closeConfirmDialog();
+      }
+    );
   };
 
   // Handlers for Competitions Toggle
   const handleToggleCompetition = async (comp: RhemaCompetition) => {
     const result = await toggleCompetition(comp.id, !comp.is_active);
-    if (result.error) alert('Error updating competition: ' + result.error);
-    else fetchData();
+    if (result.error) showNotification('error', 'Error updating competition: ' + result.error);
+    else {
+      showNotification('success', 'Competition status updated!');
+      fetchData();
+    }
   };
 
   // Registration modal handlers
@@ -267,28 +358,35 @@ export default function AdminDashboard() {
     }
 
     if (result.error) {
-      alert('Error updating registration: ' + result.error);
+      showNotification('error', 'Error updating registration: ' + result.error);
     } else {
+      showNotification('success', 'Registration updated successfully!');
       closeRegModal();
       fetchData();
     }
   };
 
   const handleDeleteRegistration = async (id: string, isCodingClass: boolean) => {
-    if (!confirm('Are you sure you want to delete this registration?')) return;
+    showConfirmDialog(
+      'Delete Registration',
+      'Are you sure you want to delete this registration? This action cannot be undone.',
+      async () => {
+        let result;
+        if (isCodingClass) {
+          result = await deleteCodingClassRegistration(id);
+        } else {
+          result = await deleteCompetitionRegistration(id);
+        }
 
-    let result;
-    if (isCodingClass) {
-      result = await deleteCodingClassRegistration(id);
-    } else {
-      result = await deleteCompetitionRegistration(id);
-    }
-
-    if (result.error) {
-      alert('Error deleting registration: ' + result.error);
-    } else {
-      fetchData();
-    }
+        if (result.error) {
+          showNotification('error', 'Error deleting registration: ' + result.error);
+        } else {
+          showNotification('success', 'Registration deleted successfully!');
+          fetchData();
+        }
+        closeConfirmDialog();
+      }
+    );
   };
 
   // E-Note handlers
@@ -348,7 +446,7 @@ export default function AdminDashboard() {
       // Validate file size (10MB max)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (file.size > maxSize) {
-        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        showNotification('error', `File "${file.name}" is too large. Maximum size is 10MB.`);
         continue;
       }
       
@@ -361,10 +459,10 @@ export default function AdminDashboard() {
           // Store object with name and url
           fileUrls.push({ name: file.name, url: result.url });
         } else {
-          alert(`Failed to upload "${file.name}": ${result.error}`);
+          showNotification('error', `Failed to upload "${file.name}": ${result.error}`);
         }
       } catch (error) {
-        alert(`Failed to upload "${file.name}": Unexpected error`);
+        showNotification('error', `Failed to upload "${file.name}": Unexpected error`);
       } finally {
         // Remove from uploading files
         setUploadingFiles(prev => prev.filter(f => f !== file.name));
@@ -408,7 +506,7 @@ export default function AdminDashboard() {
       // Validate file size (10MB max)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (file.size > maxSize) {
-        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        showNotification('error', `File "${file.name}" is too large. Maximum size is 10MB.`);
         continue;
       }
       
@@ -421,10 +519,10 @@ export default function AdminDashboard() {
           // Store object with name and url
           fileUrls.push({ name: file.name, url: result.url });
         } else {
-          alert(`Failed to upload "${file.name}": ${result.error}`);
+          showNotification('error', `Failed to upload "${file.name}": ${result.error}`);
         }
       } catch (error) {
-        alert(`Failed to upload "${file.name}": Unexpected error`);
+        showNotification('error', `Failed to upload "${file.name}": Unexpected error`);
       } finally {
         // Remove from uploading files
         setUploadingFiles(prev => prev.filter(f => f !== file.name));
@@ -447,28 +545,35 @@ export default function AdminDashboard() {
 
   const handleSaveNote = async () => {
     if (!noteFormData.title || !noteFormData.author) {
-      alert('Please fill in Title and Author');
+      showNotification('error', 'Please fill in Title and Author');
       return;
     }
 
     const result = await saveStaffNote(noteFormData as NoteInput);
     if (result.error) {
-      alert('Error saving note: ' + result.error);
+      showNotification('error', 'Error saving note: ' + result.error);
     } else {
+      showNotification('success', `Note ${isEditingNote ? 'updated' : 'created'} successfully!`);
       closeNoteModal();
       fetchNotes();
     }
   };
 
   const handleDeleteNote = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-    
-    const result = await deleteStaffNote(id);
-    if (result.error) {
-      alert('Error deleting note: ' + result.error);
-    } else {
-      fetchNotes();
-    }
+    showConfirmDialog(
+      'Delete Note',
+      'Are you sure you want to delete this note? This action cannot be undone.',
+      async () => {
+        const result = await deleteStaffNote(id);
+        if (result.error) {
+          showNotification('error', 'Error deleting note: ' + result.error);
+        } else {
+          showNotification('success', 'Note deleted successfully!');
+          fetchNotes();
+        }
+        closeConfirmDialog();
+      }
+    );
   };
 
   if (loading) return <div className="p-8 text-center text-gray-800">Loading dashboard...</div>;
@@ -492,10 +597,86 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-[100] max-w-sm w-full shadow-lg rounded-lg p-4 transition-all duration-300 ${
+          notification.type === 'success' ? 'bg-green-500 text-white' :
+          notification.type === 'error' ? 'bg-red-500 text-white' :
+          'bg-blue-500 text-white'
+        }`}>
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              {notification.type === 'success' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              )}
+              {notification.type === 'error' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              )}
+              {notification.type === 'info' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">
+                {notification.type === 'success' ? 'Success' : notification.type === 'error' ? 'Error' : 'Info'}
+              </p>
+              <p className="text-sm mt-1">{notification.message}</p>
+            </div>
+            <button 
+              onClick={() => setNotification(null)}
+              className="flex-shrink-0 text-white hover:text-gray-200 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4" onClick={closeConfirmDialog}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{confirmDialog.title}</h3>
+                <p className="text-sm text-gray-600">{confirmDialog.message}</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={closeConfirmDialog}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDialog.onConfirm}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-white rounded-xl p-4 md:p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4 text-gray-900 capitalize">
               {editingItem ? 'Edit' : 'Add'} {activeTab === 'settings' ? 'Setting' : activeTab.slice(0, -1)}
             </h3>
@@ -679,7 +860,7 @@ export default function AdminDashboard() {
       {/* Registration Detail/Edit Modal */}
       {isRegModalOpen && selectedRegistration && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl mx-4">
+          <div className="bg-white rounded-xl p-4 md:p-6 w-full max-w-2xl shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-gray-900">
                 {isEditingReg ? 'Edit' : 'View'} Registration - {'courses' in selectedRegistration ? 'Coding Class' : 'training_program' in selectedRegistration ? 'Professional Training' : 'Competition'}
@@ -1003,14 +1184,14 @@ export default function AdminDashboard() {
       {isNoteModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={closeNoteModal}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white px-6 py-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className="sticky top-0 bg-white px-4 md:px-6 py-4 border-b flex justify-between items-center z-10">
+              <h2 className="text-lg md:text-xl font-bold text-gray-800">
                 {isEditingNote ? (selectedNote ? 'Edit Note' : 'Create New Note') : 'View Note'}
               </h2>
               <button onClick={closeNoteModal} className="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                 {isEditingNote ? (
@@ -1192,8 +1373,20 @@ export default function AdminDashboard() {
                   <div className="mt-3 space-y-2">
                     <p className="text-xs font-semibold text-gray-600 mb-1">Uploaded Files:</p>
                     {noteFormData.file_urls.map((fileData, idx) => {
-                      const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
-                      const url = typeof fileData === 'string' ? fileData : fileData.url;
+                      // Parse fileData if it's a JSON string
+                      let fileObj: { name: string; url: string };
+                      if (typeof fileData === 'string') {
+                        try {
+                          fileObj = JSON.parse(fileData);
+                        } catch {
+                          fileObj = { name: fileData.split('/').pop() || `File ${idx + 1}`, url: fileData };
+                        }
+                      } else {
+                        fileObj = fileData;
+                      }
+                      
+                      const fileName = fileObj.name || `File ${idx + 1}`;
+                      const url = fileObj.url || '';
                       
                       return (
                         <div key={idx} className="flex items-center justify-between bg-green-50 border border-green-200 px-3 py-2 rounded">
@@ -1222,8 +1415,20 @@ export default function AdminDashboard() {
                   <div className="mt-3 space-y-2">
                     <p className="text-xs font-semibold text-gray-600 mb-1">Attached Files:</p>
                     {selectedNote.file_urls.map((fileData, idx) => {
-                      const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
-                      const url = typeof fileData === 'string' ? fileData : fileData.url;
+                      // Parse fileData if it's a JSON string
+                      let fileObj: { name: string; url: string };
+                      if (typeof fileData === 'string') {
+                        try {
+                          fileObj = JSON.parse(fileData);
+                        } catch {
+                          fileObj = { name: fileData.split('/').pop() || `File ${idx + 1}`, url: fileData };
+                        }
+                      } else {
+                        fileObj = fileData;
+                      }
+                      
+                      const fileName = fileObj.name || `File ${idx + 1}`;
+                      const url = fileObj.url || '';
                       
                       return (
                         <a 
@@ -1271,90 +1476,169 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-blue-900">Rhema Admin Dashboard</h1>
-        <button onClick={handleLogout} className="text-red-600 hover:text-red-800 font-medium">Logout</button>
+      <nav className="bg-white shadow-sm px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-gray-700 hover:text-blue-600"
+            aria-label="Toggle menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-lg md:text-xl font-bold text-blue-900">Rhema Admin Dashboard</h1>
+        </div>
+        <button onClick={handleLogout} className="text-red-600 hover:text-red-800 font-medium text-sm md:text-base">Logout</button>
       </nav>
 
-      <div className="container mx-auto p-6 flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
-        <aside className="w-full md:w-64 bg-white rounded-xl shadow-sm p-4 h-fit">
-          <ul className="space-y-2">
-            {(
-              [
-                { id: 'services', label: 'Services' },
-                { id: 'clients', label: 'Clients' },
-                { id: 'team', label: 'Team' },
-                { id: 'competitions', label: 'Competitions' },
-                { id: 'newsletter', label: 'Newsletter' },
-                { id: 'registrations', label: 'Competition Registrations' },
-                { id: 'coding-classes', label: 'Coding Class Registrations' },
-                { id: 'professional-trainings', label: 'Professional Trainings' },
-                { id: 'staff-notes', label: 'Staff E-Notes' },
-                { id: 'settings', label: 'General Settings' },
-              ] as const
-            ).map((tab) => (
-              <li key={tab.id}>
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
-                    activeTab === tab.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <div className="container mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6">
+        {/* Mobile Sidebar */}
+        <aside className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:w-64 md:rounded-xl md:shadow-sm ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex justify-between items-center p-4 border-b md:hidden">
+            <h2 className="text-lg font-bold text-blue-900">Menu</h2>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-500 hover:text-red-600"
+              aria-label="Close menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-4">
+            <ul className="space-y-2">
+              {(
+                [
+                  { id: 'services', label: 'Services' },
+                  { id: 'clients', label: 'Clients' },
+                  { id: 'team', label: 'Team' },
+                  { id: 'competitions', label: 'Competitions' },
+                  { id: 'newsletter', label: 'Newsletter' },
+                  { id: 'registrations', label: 'Competition Registrations' },
+                  { id: 'coding-classes', label: 'Coding Class Registrations' },
+                  { id: 'professional-trainings', label: 'Professional Trainings' },
+                  { id: 'staff-notes', label: 'Staff E-Notes' },
+                  { id: 'settings', label: 'General Settings' },
+                ] as const
+              ).map((tab) => (
+                <li key={tab.id}>
+                  <button
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      activeTab === tab.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-2xl font-bold mb-6 capitalize text-gray-900">{activeTab === 'settings' ? 'General Settings' : `${activeTab} Management`}</h2>
+        <main className="flex-1 bg-white rounded-xl shadow-sm p-4 md:p-6">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 capitalize text-gray-900">{activeTab === 'settings' ? 'General Settings' : `${activeTab} Management`}</h2>
           
           {activeTab === 'services' && (
             <div className="space-y-4">
-              <div className="flex justify-end">
-                <button onClick={() => openModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">Add New Service</button>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div className="flex-1 w-full md:max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search services..."
+                    value={servicesSearch}
+                    onChange={(e) => setServicesSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
+                <button onClick={() => openModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm md:text-base">Add New Service</button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Title</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Description</th>
-                      <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {services.map((service) => (
-                      <tr key={service.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{service.title}</td>
-                        <td className="px-6 py-4 text-gray-600">{service.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => openModal(service)} className="text-indigo-600 hover:text-indigo-900 mr-4 font-semibold">Edit</button>
-                          <button onClick={() => handleDelete('rhema_services', service.id, fetchData)} className="text-red-600 hover:text-red-900 font-semibold">Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              
+              {/* Mobile-first card layout */}
+              <div className="grid grid-cols-1 gap-4">
+                {filteredServices.map((service) => (
+                  <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h3>
+                        <p className="text-sm text-gray-600 line-clamp-3">{service.description}</p>
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <button 
+                          onClick={() => openModal(service)} 
+                          className="flex-1 text-center text-indigo-600 hover:text-indigo-900 text-sm font-semibold py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDelete('rhema_services', service.id, fetchData)} 
+                          className="flex-1 text-center text-red-600 hover:text-red-900 text-sm font-semibold py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
+              
+              {filteredServices.length === 0 && (
+                <div className="text-center py-8 text-gray-500 italic">
+                  {services.length === 0 ? 'No services found. Add your first service!' : 'No services match your search.'}
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'clients' && (
             <div className="space-y-4">
-              <div className="flex justify-end">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div className="flex-1 w-full md:max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={clientsSearch}
+                    onChange={(e) => setClientsSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
                 <button onClick={() => openModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">Add New Client</button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {clients.map((client) => (
-                  <div key={client.id} className="border border-gray-200 p-4 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
-                    <span className="text-gray-800 font-medium">{client.name}</span>
-                    <div>
-                      <button onClick={() => openModal(client)} className="text-indigo-600 hover:text-indigo-900 mr-3 text-sm font-semibold">Edit</button>
-                      <button onClick={() => handleDelete('rhema_clients', client.id, fetchData)} className="text-red-600 hover:text-red-900 text-sm font-semibold">Delete</button>
+              <div className="grid grid-cols-1 gap-4">
+                {filteredClients.map((client) => (
+                  <div key={client.id} className="border border-gray-200 p-4 rounded-lg hover:shadow-md transition-colors bg-white">
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900">{client.name}</h3>
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <button 
+                          onClick={() => openModal(client)} 
+                          className="flex-1 text-center text-indigo-600 hover:text-indigo-900 text-sm font-semibold py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDelete('rhema_clients', client.id, fetchData)} 
+                          className="flex-1 text-center text-red-600 hover:text-red-900 text-sm font-semibold py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1364,11 +1648,20 @@ export default function AdminDashboard() {
 
           {activeTab === 'team' && (
             <div className="space-y-4">
-              <div className="flex justify-end">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div className="flex-1 w-full md:max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search team members..."
+                    value={teamSearch}
+                    onChange={(e) => setTeamSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
                 <button onClick={() => openModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">Add Team Member</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {team.map((member) => (
+                {filteredTeam.map((member) => (
                   <div key={member.id} className="border border-gray-200 p-4 rounded-lg hover:bg-gray-50 transition-colors">
                     <h3 className="font-bold text-gray-900">{member.name}</h3>
                     <p className="text-gray-600 text-sm">{member.role}</p>
@@ -1384,11 +1677,20 @@ export default function AdminDashboard() {
 
           {activeTab === 'competitions' && (
              <div className="space-y-4">
-               <div className="flex justify-end">
+               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div className="flex-1 w-full md:max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search competitions..."
+                    value={competitionsSearch}
+                    onChange={(e) => setCompetitionsSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
                 <button onClick={() => openModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">Add Competition</button>
               </div>
                <p className="text-gray-600 mb-4">Manage R.E.S Coding Competition details here.</p>
-               {competitions.map((comp) => (
+               {filteredCompetitions.map((comp) => (
                  <div key={comp.id} className="border border-gray-200 p-4 rounded-lg hover:bg-gray-50 transition-colors">
                    <h3 className="font-bold text-gray-900 text-lg">{comp.title}</h3>
                    <p className="text-gray-700 mt-1">{comp.description}</p>
@@ -1455,168 +1757,332 @@ export default function AdminDashboard() {
 
           {activeTab === 'registrations' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">Competition Registrations</h3>
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">{registrations.length} Total</span>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+                <h3 className="text-lg md:text-xl font-bold text-gray-800">Competition Registrations</h3>
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs md:text-sm font-bold self-start">{filteredRegistrations.length} / {registrations.length} Total</span>
               </div>
 
-              <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">School</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Parent Contact</th>
-                      <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {registrations.map((reg) => (
-                      <tr key={reg.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(reg.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{reg.full_name}</div>
-                          <div className="text-sm text-gray-500">{reg.gender}, {reg.age}yrs</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {reg.category}
-                          <div className="text-xs text-gray-500">{reg.class_level}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="font-medium text-gray-900">{reg.school_name}</div>
-                          <div className="text-xs">{reg.school_phone || 'No phone'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{reg.parent_name}</div>
-                          <div className="text-sm text-gray-500">{reg.parent_phone}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => openRegModal(reg, false)} className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                          <button onClick={() => openRegModal(reg, true)} className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                          <button onClick={() => handleDeleteRegistration(reg.id, false)} className="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                    {registrations.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
-                          No registrations found yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+              {/* Search and Filter */}
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or phone..."
+                    value={registrationsSearch}
+                    onChange={(e) => setRegistrationsSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
+                <select
+                  value={registrationsFilterStatus}
+                  onChange={(e) => setRegistrationsFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 text-gray-900 bg-white"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
+              {/* Mobile-first card layout */}
+              <div className="grid grid-cols-1 gap-4">
+                {filteredRegistrations.map((reg) => (
+                  <div key={reg.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div className="space-y-3">
+                      {/* Header: Date & Status */}
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 pb-3 border-b border-gray-100">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Registered</p>
+                          <p className="text-sm font-semibold text-gray-900">{new Date(reg.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <select
+                          value={reg.status}
+                          onChange={async (e) => {
+                            const result = await updateCompetitionRegistration(reg.id, { status: e.target.value });
+                            if (result.success) {
+                              showNotification('success', 'Status updated successfully!');
+                              fetchData();
+                            } else {
+                              showNotification('error', 'Error updating status: ' + result.error);
+                            }
+                          }}
+                          className={`text-xs font-bold px-3 py-2 rounded-lg border-0 outline-none cursor-pointer self-start ${
+                            reg.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : reg.status === 'contacted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : reg.status === 'approved'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+
+                      {/* Student Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Student Information</p>
+                        <h4 className="text-base font-bold text-gray-900">{reg.full_name}</h4>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>{reg.gender}, {reg.age} years old</span>
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span className="truncate">{reg.parent_email || 'No email'}</span>
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <span>{reg.parent_phone}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Category & Class */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Competition Details</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold inline-block mb-2">
+                            {reg.category}
+                          </span>
+                          <p className="text-sm text-gray-700"><span className="font-semibold">Class Level:</span> {reg.class_level}</p>
+                        </div>
+                      </div>
+
+                      {/* School Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">School Information</p>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-gray-900">{reg.school_name}</p>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <span>{reg.school_phone || 'No phone'}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Parent Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Parent/Guardian Contact</p>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-gray-900">{reg.parent_name}</p>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <span>{reg.parent_phone}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-3 border-t border-gray-100">
+                        <button 
+                          onClick={() => openRegModal(reg, false)} 
+                          className="flex-1 text-center text-blue-600 hover:text-blue-900 text-sm font-semibold py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          View
+                        </button>
+                        <button 
+                          onClick={() => openRegModal(reg, true)} 
+                          className="flex-1 text-center text-indigo-600 hover:text-indigo-900 text-sm font-semibold py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRegistration(reg.id, false)} 
+                          className="flex-1 text-center text-red-600 hover:text-red-900 text-sm font-semibold py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredRegistrations.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 italic bg-white rounded-lg border border-gray-200">
+                    {registrations.length === 0 ? 'No registrations found yet.' : 'No registrations match your filters.'}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {activeTab === 'coding-classes' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">Coding Class Registrations</h3>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">{codingClassRegistrations.length} Total</span>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+                <h3 className="text-lg md:text-xl font-bold text-gray-800">Coding Class Registrations</h3>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs md:text-sm font-bold self-start">{filteredCodingClasses.length} / {codingClassRegistrations.length} Total</span>
               </div>
 
-              <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Courses</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Payment</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Experience</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {codingClassRegistrations.map((reg) => (
-                      <tr key={reg.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(reg.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{reg.full_name}</div>
-                          <div className="text-sm text-gray-500">{reg.email || 'No email'}</div>
-                          <div className="text-sm text-gray-500">{reg.phone}</div>
-                          <div className="text-xs text-gray-400">{reg.gender}{reg.age ? `, ${reg.age}yrs` : ''}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                          <div className="flex flex-wrap gap-1">
-                            {reg.courses.map((course, i) => (
-                              <span key={i} className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
-                                {course}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">
-                          {reg.payment_plan.replace('_', ' ')}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
-                          {reg.experience_level}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+              {/* Search and Filter */}
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or phone..."
+                    value={codingClassesSearch}
+                    onChange={(e) => setCodingClassesSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
+                <select
+                  value={codingClassesFilterStatus}
+                  onChange={(e) => setCodingClassesFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-500 text-gray-900 bg-white"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="enrolled">Enrolled</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Mobile-first card layout */}
+              <div className="grid grid-cols-1 gap-4">
+                {filteredCodingClasses.map((reg) => (
+                  <div key={reg.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div className="space-y-3">
+                      {/* Header: Date & Status */}
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 pb-3 border-b border-gray-100">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Registered</p>
+                          <p className="text-sm font-semibold text-gray-900">{new Date(reg.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <select
+                          value={reg.status}
+                          onChange={async (e) => {
+                            const result = await updateCodingClassStatus(reg.id, e.target.value);
+                            if (result.success) {
+                              showNotification('success', 'Status updated successfully!');
+                              fetchData();
+                            } else {
+                              showNotification('error', 'Error updating status: ' + result.error);
+                            }
+                          }}
+                          className={`text-xs font-bold px-3 py-2 rounded-lg border-0 outline-none cursor-pointer ${
+                            reg.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : reg.status === 'contacted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : reg.status === 'enrolled'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="enrolled">Enrolled</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </div>
+
+                      {/* Student Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Student Information</p>
+                        <h4 className="text-base font-bold text-gray-900">{reg.full_name}</h4>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span className="truncate">{reg.email || 'No email'}</span>
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <span>{reg.phone}</span>
+                          </p>
+                          <p className="text-xs text-gray-500">{reg.gender}{reg.age ? `, ${reg.age} years old` : ''}</p>
+                        </div>
+                      </div>
+
+                      {/* Courses */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Enrolled Courses</p>
+                        <div className="flex flex-wrap gap-2">
+                          {reg.courses.map((course, i) => (
+                            <span key={i} className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-semibold">
+                              {course}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Payment Plan</p>
+                          <p className="text-sm font-semibold text-gray-900 capitalize">{reg.payment_plan.replace('_', ' ')}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Experience</p>
+                          <p className="text-sm font-semibold text-gray-900 capitalize">{reg.experience_level}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 mb-1">Preferred Start Date</p>
                           {reg.preferred_start_date ? (
-                            <span className="font-medium">{new Date(reg.preferred_start_date).toLocaleDateString()}</span>
+                            <p className="text-sm font-semibold text-gray-900">{new Date(reg.preferred_start_date).toLocaleDateString()}</p>
                           ) : (
-                            <span className="text-gray-400 text-xs">Not specified</span>
+                            <p className="text-sm text-gray-400 italic">Not specified</p>
                           )}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <select
-                            value={reg.status}
-                            onChange={async (e) => {
-                              const result = await updateCodingClassStatus(reg.id, e.target.value);
-                              if (result.success) {
-                                fetchData();
-                              } else {
-                                alert('Error updating status: ' + result.error);
-                              }
-                            }}
-                            className={`text-xs font-bold px-2 py-1 rounded border outline-none cursor-pointer ${
-                              reg.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                                : reg.status === 'contacted'
-                                ? 'bg-blue-100 text-blue-800 border-blue-200'
-                                : reg.status === 'enrolled'
-                                ? 'bg-green-100 text-green-800 border-green-200'
-                                : 'bg-red-100 text-red-800 border-red-200'
-                            }`}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="enrolled">Enrolled</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                          {reg.notes && (
-                            <div className="text-xs text-gray-500 mt-1 max-w-[150px] truncate" title={reg.notes}>
-                              {reg.notes}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => openRegModal(reg, false)} className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                          <button onClick={() => openRegModal(reg, true)} className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                          <button onClick={() => handleDeleteRegistration(reg.id, true)} className="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                    {codingClassRegistrations.length === 0 && (
-                      <tr>
-                        <td colSpan={8} className="px-6 py-10 text-center text-gray-500 italic">
-                          No coding class registrations found yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      {reg.notes && (
+                        <div className="pt-3 border-t border-gray-100">
+                          <p className="text-xs text-gray-500 mb-1">Notes</p>
+                          <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{reg.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-3 border-t border-gray-100">
+                        <button 
+                          onClick={() => openRegModal(reg, false)} 
+                          className="flex-1 text-center text-blue-600 hover:text-blue-900 text-sm font-semibold py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          View
+                        </button>
+                        <button 
+                          onClick={() => openRegModal(reg, true)} 
+                          className="flex-1 text-center text-indigo-600 hover:text-indigo-900 text-sm font-semibold py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRegistration(reg.id, true)} 
+                          className="flex-1 text-center text-red-600 hover:text-red-900 text-sm font-semibold py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {codingClassRegistrations.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 italic bg-white rounded-lg border border-gray-200">
+                    No coding class registrations found yet.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1683,19 +2149,19 @@ export default function AdminDashboard() {
                 <>
                   <div className="grid gap-4">
                     {staffNotes.map((note) => (
-                      <div key={note.id} className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${note.is_pinned ? 'bg-yellow-50 border-yellow-300' : ''}`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                      <div key={note.id} className={`border border-gray-200 rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow ${note.is_pinned ? 'bg-yellow-50 border-yellow-300' : ''}`}>
+                        <div className="flex flex-col md:flex-row md:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {note.is_pinned && <span className="text-yellow-600">📌</span>}
-                              <h3 className="text-lg font-bold text-gray-800">{note.title}</h3>
+                              <h3 className="text-base md:text-lg font-bold text-gray-800 break-words">{note.title}</h3>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+                            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600 mb-2 flex-wrap">
                               <span>By: {note.author}</span>
                               <span>•</span>
                               <span>{new Date(note.created_at).toLocaleDateString()}</span>
                             </div>
-                            <div className="flex gap-2 mb-2">
+                            <div className="flex gap-2 mb-2 flex-wrap">
                               <span className={`px-2 py-1 rounded text-xs font-semibold ${
                                 note.category === 'urgent' ? 'bg-red-100 text-red-800' :
                                 note.category === 'announcement' ? 'bg-purple-100 text-purple-800' :
@@ -1715,31 +2181,45 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             {note.content ? (
-                              <p className="text-gray-700 text-sm line-clamp-2">{note.content}</p>
+                              <p className="text-gray-700 text-xs md:text-sm line-clamp-2 break-words">{note.content}</p>
                             ) : note.file_urls && note.file_urls.length > 0 ? (
-                              <p className="text-gray-500 text-sm italic">📎 Attachment-only note</p>
+                              <p className="text-gray-500 text-xs md:text-sm italic">📎 Attachment-only note</p>
                             ) : (
-                              <p className="text-gray-400 text-sm italic">No content</p>
+                              <p className="text-gray-400 text-xs md:text-sm italic">No content</p>
                             )}
                             {note.file_urls && note.file_urls.length > 0 && (
                               <div className="mt-2">
                                 <p className="text-xs text-gray-600 font-semibold mb-1">Attachments:</p>
                                 <div className="flex flex-wrap gap-2">
                                   {note.file_urls.map((fileData, idx) => {
-                                    const fileName = typeof fileData === 'string' ? fileData.split('/').pop() || `File ${idx + 1}` : fileData.name;
-                                    const url = typeof fileData === 'string' ? fileData : fileData.url;
+                                    // Parse fileData if it's a JSON string
+                                    let fileObj: { name: string; url: string };
+                                    if (typeof fileData === 'string') {
+                                      try {
+                                        fileObj = JSON.parse(fileData);
+                                      } catch {
+                                        // If it's a plain URL string
+                                        fileObj = { name: fileData.split('/').pop() || `File ${idx + 1}`, url: fileData };
+                                      }
+                                    } else {
+                                      fileObj = fileData;
+                                    }
+                                    
+                                    const fileName = fileObj.name || `File ${idx + 1}`;
+                                    const url = fileObj.url || '';
+                                    
                                     return (
                                       <a 
                                         key={idx} 
                                         href={url} 
                                         target="_blank" 
                                         rel="noopener noreferrer" 
-                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded break-all"
                                       >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                         </svg>
-                                        {fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName}
+                                        <span className="truncate max-w-[150px]">{fileName}</span>
                                       </a>
                                     );
                                   })}
@@ -1747,10 +2227,10 @@ export default function AdminDashboard() {
                               </div>
                             )}
                           </div>
-                          <div className="flex gap-2 ml-4">
-                            <button onClick={() => openNoteModal(note, false)} className="text-blue-600 hover:text-blue-900 text-sm font-medium">View</button>
-                            <button onClick={() => openNoteModal(note, true)} className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">Edit</button>
-                            <button onClick={() => handleDeleteNote(note.id)} className="text-red-600 hover:text-red-900 text-sm font-medium">Delete</button>
+                          <div className="flex gap-2 md:flex-col md:gap-2 flex-shrink-0">
+                            <button onClick={() => openNoteModal(note, false)} className="text-blue-600 hover:text-blue-900 text-xs md:text-sm font-medium px-3 py-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors">View</button>
+                            <button onClick={() => openNoteModal(note, true)} className="text-indigo-600 hover:text-indigo-900 text-xs md:text-sm font-medium px-3 py-1 bg-indigo-50 rounded hover:bg-indigo-100 transition-colors">Edit</button>
+                            <button onClick={() => handleDeleteNote(note.id)} className="text-red-600 hover:text-red-900 text-xs md:text-sm font-medium px-3 py-1 bg-red-50 rounded hover:bg-red-100 transition-colors">Delete</button>
                           </div>
                         </div>
                       </div>
@@ -1790,20 +2270,58 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'professional-trainings' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Professional Training Registrations</h2>
-                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
-                  {professionalTrainings.length} Total
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800">Professional Training Registrations</h2>
+                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs md:text-sm font-semibold self-start">
+                  {filteredProfessionalTrainings.length} / {professionalTrainings.length} Total
                 </span>
               </div>
 
-              {professionalTrainings.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg">No professional training registrations yet.</p>
+              {/* Search and Filters */}
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, phone, or program..."
+                    value={professionalTrainingsSearch}
+                    onChange={(e) => setProfessionalTrainingsSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-900"
+                  />
+                </div>
+                <select
+                  value={professionalTrainingsFilterStatus}
+                  onChange={(e) => setProfessionalTrainingsFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-900 bg-white"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="enrolled">Enrolled</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <select
+                  value={professionalTrainingsFilterProgram}
+                  onChange={(e) => setProfessionalTrainingsFilterProgram(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-900 bg-white"
+                >
+                  <option value="">All Programs</option>
+                  <option value="AI: Deep Learning">AI: Deep Learning</option>
+                  <option value="AI: Machine Learning">AI: Machine Learning</option>
+                  <option value="Power BI">Power BI</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Data Analytics">Data Analytics</option>
+                  <option value="Cyber Security">Cyber Security</option>
+                  <option value="IoT">IoT</option>
+                </select>
+              </div>
+
+              {filteredProfessionalTrainings.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200">
+                  <p className="text-lg">{professionalTrainings.length === 0 ? 'No professional training registrations yet.' : 'No registrations match your filters.'}</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="grid grid-cols-1 gap-4">
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
@@ -1818,7 +2336,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {professionalTrainings.map((training) => (
+                      {filteredProfessionalTrainings.map((training) => (
                         <tr key={training.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
                             <div className="font-semibold text-gray-800 text-sm">{training.full_name}</div>
@@ -1851,7 +2369,7 @@ export default function AdminDashboard() {
                                 if (result.success) {
                                   fetchProfessionalTrainingsData();
                                 } else {
-                                  alert('Failed to update status');
+                                  showNotification('error', 'Failed to update status');
                                 }
                               }}
                               className={`px-2 py-1 rounded text-xs font-semibold border-0 ${
@@ -1879,15 +2397,21 @@ export default function AdminDashboard() {
                                 View
                               </button>
                               <button
-                                onClick={async () => {
-                                  if (confirm('Delete this registration?')) {
-                                    const result = await deleteProfessionalTraining(training.id);
-                                    if (result.success) {
-                                      fetchProfessionalTrainingsData();
-                                    } else {
-                                      alert('Failed to delete');
+                                onClick={() => {
+                                  showConfirmDialog(
+                                    'Delete Registration',
+                                    'Are you sure you want to delete this registration? This action cannot be undone.',
+                                    async () => {
+                                      const result = await deleteProfessionalTraining(training.id);
+                                      if (result.success) {
+                                        showNotification('success', 'Registration deleted successfully!');
+                                        fetchProfessionalTrainingsData();
+                                      } else {
+                                        showNotification('error', 'Failed to delete');
+                                      }
+                                      closeConfirmDialog();
                                     }
-                                  }
+                                  );
                                 }}
                                 className="text-red-600 hover:text-red-800 text-xs font-semibold"
                               >
