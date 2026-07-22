@@ -6,6 +6,7 @@ import AutoScrollGallery from "@/components/AutoScrollGallery";
 import ContactButton from "@/components/ContactButton";
 import NewsTicker from "@/components/NewsTicker";
 import VideoPlayer from "@/components/VideoPlayer";
+import ENotesSection from "@/components/ENotesSection";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { RhemaCompetition, RhemaNewsletter, RhemaService, RhemaClient, RhemaTeam, RhemaContent, RhemaStaffNote } from "@/types/supabase";
 import Header from "@/components/Header";
@@ -584,141 +585,7 @@ export default async function Home() {
       </section>
 
       {/* E-Notes / Updates Section */}
-      {staffNotes.length > 0 && (
-        <section id="updates" className="py-16 bg-gradient-to-br from-amber-50 via-white to-blue-50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                Latest Updates
-              </div>
-              <h2 className="text-3xl font-bold text-blue-900 mb-4">Staff E-Notes & Announcements</h2>
-              <div className="w-20 h-1 bg-gradient-to-r from-amber-500 to-amber-300 mx-auto rounded-full"></div>
-              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
-                Stay informed with the latest announcements, updates, and important notices from our team.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {staffNotes.map((note) => {
-                const categoryColors: Record<string, string> = {
-                  general: 'bg-blue-100 text-blue-700',
-                  student: 'bg-green-100 text-green-700',
-                  admin: 'bg-gray-100 text-gray-700',
-                  urgent: 'bg-red-100 text-red-700',
-                  announcement: 'bg-purple-100 text-purple-700',
-                };
-                const priorityColors: Record<string, string> = {
-                  low: 'bg-gray-100 text-gray-600',
-                  normal: 'bg-blue-50 text-blue-600',
-                  high: 'bg-orange-100 text-orange-700',
-                  urgent: 'bg-red-100 text-red-700',
-                };
-
-                // Parse file_urls (can be string[] or {name, url}[])
-                const files = (note.file_urls || []).map((f) => {
-                  if (typeof f === 'string') return { name: f.split('/').pop() || 'Download', url: f };
-                  return f;
-                });
-
-                return (
-                  <div
-                    key={note.id}
-                    className={`bg-white rounded-2xl p-6 shadow-sm border hover:shadow-lg transition-all duration-300 flex flex-col ${
-                      note.is_pinned
-                        ? 'border-amber-300 ring-2 ring-amber-100'
-                        : 'border-gray-100'
-                    }`}
-                  >
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {note.is_pinned && (
-                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-semibold">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
-                            </svg>
-                            Pinned
-                          </span>
-                        )}
-                        {note.category && (
-                          <span className={`${categoryColors[note.category] || 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded-full text-xs font-semibold capitalize`}>
-                            {note.category}
-                          </span>
-                        )}
-                        {note.priority && note.priority !== 'normal' && (
-                          <span className={`${priorityColors[note.priority] || 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded-full text-xs font-semibold capitalize`}>
-                            {note.priority}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-blue-900 mb-2 leading-snug">{note.title}</h3>
-
-                    {/* Content preview */}
-                    {note.content && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow leading-relaxed">
-                        {note.content}
-                      </p>
-                    )}
-
-                    {/* Spacer if no content */}
-                    {!note.content && <div className="flex-grow" />}
-
-                    {/* Tags */}
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {note.tags.map((tag, i) => (
-                          <span key={i} className="bg-gray-50 text-gray-500 px-2 py-0.5 rounded text-xs">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* File Downloads */}
-                    {files.length > 0 && (
-                      <div className="mt-auto pt-3 border-t border-gray-100">
-                        <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Attachments</p>
-                        <div className="space-y-1.5">
-                          {files.map((file, i) => (
-                            <a
-                              key={i}
-                              href={file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download
-                              className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg transition-colors text-sm group"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <span className="truncate flex-grow">{file.name}</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Footer: Author & Date */}
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
-                      <span className="font-medium text-gray-500">{note.author}</span>
-                      <span>{new Date(note.created_at).toISOString().split('T')[0]}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+      <ENotesSection notes={staffNotes} />
 
       {/* Projects Section */}
       <section id="projects" className="py-16 bg-white">

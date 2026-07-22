@@ -68,6 +68,7 @@ export default function AdminDashboard() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [noteCopied, setNoteCopied] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
   
@@ -424,6 +425,7 @@ export default function AdminDashboard() {
     setSelectedNote(null);
     setIsEditingNote(false);
     setNoteFormData({});
+    setNoteCopied(false);
   };
 
   const handleNoteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -1182,7 +1184,7 @@ export default function AdminDashboard() {
 
       {/* Note Modal */}
       {isNoteModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={closeNoteModal}>
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={closeNoteModal}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white px-4 md:px-6 py-4 border-b flex justify-between items-center z-10">
               <h2 className="text-lg md:text-xl font-bold text-gray-800">
@@ -1209,7 +1211,50 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Content <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Content <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  {!isEditingNote && selectedNote?.content && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(selectedNote.content || '');
+                          setNoteCopied(true);
+                          setTimeout(() => setNoteCopied(false), 2000);
+                        } catch {
+                          const textarea = document.createElement('textarea');
+                          textarea.value = selectedNote.content || '';
+                          document.body.appendChild(textarea);
+                          textarea.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(textarea);
+                          setNoteCopied(true);
+                          setTimeout(() => setNoteCopied(false), 2000);
+                        }
+                      }}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        noteCopied
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
+                    >
+                      {noteCopied ? (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 {isEditingNote ? (
                   <textarea
                     name="content"
