@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getServiceImages, getRandomImages } from "@/lib/images";
+import { getServiceImages, getRandomImages, getCloudinaryImage, resolveImageUrl } from "@/lib/images";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import AutoScrollGallery from "@/components/AutoScrollGallery";
@@ -48,9 +48,9 @@ export default async function Home() {
   };
 
   // Fallback to static content if dynamic content is missing
-  // Get images for specific sections
-  const codingImages = getServiceImages('coding');
-  const roboticsImages = getServiceImages('robotics');
+  // Get images for specific sections (now async - fetched from Cloudinary)
+  const codingImages = await getServiceImages('coding');
+  const roboticsImages = await getServiceImages('robotics');
   const allProjectImages = [...codingImages, ...roboticsImages];
   
   // Hero: All images from coding and robotics, randomized
@@ -122,19 +122,33 @@ export default async function Home() {
   // We should prefer showing NOTHING if the DB call succeeded but returned 0 items, rather than showing stale static data.
   // However, `dynamicServices` is initialized as null.
   
+  // Pre-fetch service folder images from Cloudinary for all possible folders
+  const serviceFolderImages: Record<string, string[]> = {};
+  const allFolderNames = [
+    ...new Set([
+      ...(dynamicServices || []).map(s => s.folder_name).filter(Boolean) as string[],
+      ...staticServicesData.map(s => s.folder),
+    ]),
+  ];
+  await Promise.all(
+    allFolderNames.map(async (folder) => {
+      serviceFolderImages[folder] = await getServiceImages(folder);
+    })
+  );
+
   const servicesToRender = dynamicServices && dynamicServices.length > 0 
     ? dynamicServices.map(s => ({
         ...s,
         images: [
-          ...(s.image_urls || []), 
-          ...(s.folder_name ? getServiceImages(s.folder_name) : [])
+          ...(s.image_urls || []).map(resolveImageUrl), 
+          ...(s.folder_name ? (serviceFolderImages[s.folder_name] || []) : [])
         ].slice(0, 3)
       }))
     : dynamicServices !== null // If DB fetch succeeded but empty, show nothing. Only show static if DB fetch failed/not run (null)
       ? []
       : staticServicesData.map(service => ({
         ...service,
-        images: getServiceImages(service.folder).slice(0, 3)
+        images: (serviceFolderImages[service.folder] || []).slice(0, 3)
       }));
 
 
@@ -170,27 +184,27 @@ export default async function Home() {
     {
       name: "FRED C. ODII",
       role: "Head of Operations (HOO)",
-      image_url: "/img/staff/fred.jpeg"
+      image_url: getCloudinaryImage('staff', 'fred.jpeg')
     },
     {
       name: "CHIAMAKA OKONKWO",
       role: "Admin Officer",
-      image_url: "/img/staff/admin.jpg"
+      image_url: getCloudinaryImage('staff', 'admin.jpg')
     },
     {
       name: "ADEBOLA ADEYEMI",
       role: "STEM Instructor",
-      image_url: "/img/staff/instructor.jpg"
+      image_url: getCloudinaryImage('staff', 'instructor.jpg')
     },
     {
       name: "NWACHUKWU ONYEKACHI",
       role: "Chief Technology Officer (CTO)",
-      image_url: "/img/staff/onyekachi.jpeg"
+      image_url: getCloudinaryImage('staff', 'onyekachi.jpeg')
     },
     {
       name: "CHINEDU OKAFOR",
       role: "Remote Software Engineer",
-      image_url: "/img/staff/remote%20software%20engineer.jpg"
+      image_url: getCloudinaryImage('staff', 'remote-software-engineer.jpg')
     }
   ];
 
@@ -213,8 +227,8 @@ export default async function Home() {
     const orderRank = (member: { name?: string | null; image_url?: string | null }) => {
       const img = member.image_url || '';
       const name = (member.name || '').toLowerCase();
-      if (img.includes('/img/staff/fred') || name.includes('fred')) return 1;
-      if (img.includes('/img/staff/admin') || name.includes('admin')) return 2;
+      if (img.includes('/staff/fred') || name.includes('fred')) return 1;
+      if (img.includes('/staff/admin') || name.includes('admin')) return 2;
       return 100;
     };
 
@@ -335,7 +349,7 @@ export default async function Home() {
               >
                 <div className="relative aspect-video bg-gray-100">
                   <Image
-                    src="/img/preview.png"
+                    src={getCloudinaryImage('', 'preview.png')}
                     alt="Online Training Preview"
                     fill
                     className="object-cover"
@@ -369,8 +383,6 @@ export default async function Home() {
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/30 rounded-full mix-blend-screen filter blur-[100px] opacity-60"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] opacity-60"></div>
         <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] bg-pink-600/20 rounded-full mix-blend-screen filter blur-[80px] opacity-50"></div>
-        
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('/img/pattern.png')] bg-repeat z-0"></div>
         
         <div className="container mx-auto px-4 relative z-10 text-white">
           <div className="flex flex-col md:flex-row items-center justify-between">
@@ -442,7 +454,7 @@ export default async function Home() {
                 {/* Floating Coding Image Badge */}
                 <div className="absolute -top-8 -right-8 w-42 h-42 rounded-full border-4 border-white/20 shadow-xl overflow-hidden z-20 animate-bounce">
                   <Image
-                    src="/img/coding.jpg"
+                    src={getCloudinaryImage('', 'coding.jpg')}
                     alt="Coding Badge"
                     fill
                     className="object-cover"
@@ -452,7 +464,7 @@ export default async function Home() {
                 <div className="flex flex-col items-center">
                    <div className="relative w-52 h-52 transform group-hover:scale-110 transition-transform duration-500">
                      <Image
-                       src="/img/cup.png"
+                       src={getCloudinaryImage('', 'cup.png')}
                        alt="National Award Cup"
                        fill
                        className="object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"
@@ -660,7 +672,7 @@ export default async function Home() {
               <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 w-full max-w-sm flex flex-col items-center group text-center">
                 <div className="relative w-48 h-48 rounded-full overflow-hidden mb-6 border-4 border-blue-50 shadow-inner group-hover:border-red-50 transition-colors duration-300">
                   <ImageWithSkeleton
-                    src={staff.image_url || '/img/placeholder-staff.png'}
+                    src={resolveImageUrl(staff.image_url)}
                     alt={staff.name}
                     fill
                     className="object-cover transform group-hover:scale-110 transition-transform duration-700"

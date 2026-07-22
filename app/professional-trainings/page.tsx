@@ -78,7 +78,6 @@ export default function ProfessionalTrainingPage() {
       
       {/* Hero Header */}
       <header className="bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900 text-white py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/img/pattern.png')] opacity-10 bg-repeat"></div>
         <div className="container mx-auto max-w-5xl relative z-10 text-center">
           <Link href="/" className="inline-block mb-6 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm font-medium transition-colors border border-white/20">
              ← Back to Home

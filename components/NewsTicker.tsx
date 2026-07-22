@@ -54,7 +54,7 @@ export default function NewsTicker({ newsletters, interval = 5000 }: NewsTickerP
               LATEST NEWS
             </span>
             <span className="text-gray-500 text-xs">
-              {new Date(currentNews.created_at || '').toLocaleDateString()}
+              {new Date(currentNews.created_at || '').toISOString().split('T')[0]}
             </span>
           </div>
           
