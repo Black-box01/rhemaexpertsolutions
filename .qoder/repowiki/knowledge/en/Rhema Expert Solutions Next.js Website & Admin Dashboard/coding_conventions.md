@@ -1,6 +1,6 @@
-- Server actions are declared with `'use server'` at the top of each file and return a uniform `{ success: boolean; error?: string; data? }` shape consumed by the dashboard.
-- Every server action begins with `const isAuth = await checkAuth()` and early-returns `{ success: false, error: 'Unauthorized' }` before touching Supabase.
-- After mutating operations (`saveStaffNote`, `deleteStaffNote`, etc.) the action calls `revalidatePath('/admin/dashboard')` instead of manual client refresh.
-- Supabase queries use the service-role `supabaseAdmin` client from `@/lib/supabase-admin`; the public `supabase` client from `@/lib/supabase.ts` is reserved for read-only contexts.
-- All database row shapes are imported from the single `@/types/supabase.ts` module rather than re-declared per file.
-- File uploads in server actions generate names as `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}` and store them under a fixed storage bucket path (`attachments/...`).
+- Server actions in `app/actions/*.ts` are declared with the `'use server'` directive and guard every mutation/query by calling `checkAuth()` before touching Supabase.
+- Client components import server actions directly and trigger cache invalidation with `revalidatePath('/admin/dashboard')` after successful mutations instead of manual refetches.
+- Supabase queries use the service-role client from `@/lib/supabase-admin` for all write paths and the regular client from `@/lib/supabase` for public reads, keeping RLS bypass explicit.
+- E-mail sending is wrapped so missing SMTP credentials produce a console warning and a `{ success: false }` result rather than failing the caller; callers catch and log but never abort the primary operation.
+- Admin UI state uses a single `activeTab` enum (`services | clients | team | competitions | newsletter | settings | registrations | coding-classes | staff-notes | professional-trainings`) to drive conditional rendering and data fetching inside one dashboard component.
+- Form handling follows a uniform pattern: controlled inputs update a generic `formData` object via a single `handleInputChange` keyed by `e.target.name`, then dispatch to a tab-specific save function.

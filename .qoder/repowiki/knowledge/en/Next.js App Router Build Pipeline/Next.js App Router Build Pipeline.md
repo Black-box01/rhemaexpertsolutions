@@ -12,22 +12,11 @@ source_files:
     - eslint.config.mjs
 ---
 
-This project uses the standard Next.js 16 build pipeline with no custom build orchestration. The entire build system is defined through npm scripts and framework configuration files.
+This project uses the standard Next.js (v16) build system with no custom build orchestration. The entire pipeline is defined in package.json scripts and relies on Next.js built-in tooling:
 
-Build toolchain: Next.js 16 (App Router) with TypeScript 5, Tailwind CSS v4 via @tailwindcss/postcss, ESLint v9 using eslint-config-next core-web-vitals + typescript presets.
+- Development: npm run dev -> next dev (TurboPack-enabled dev server)
+- Build: npm run build -> next build (production compilation, static generation for App Router pages, server bundle for server actions)
+- Start: npm run start -> next start (serves the production build)
+- Lint: npm run lint -> eslint (via eslint.config.mjs)
 
-Scripts (package.json):
-- npm run dev — Next.js development server
-- npm run build — Production build (Turbopack enabled by default in Next.js 16)
-- npm run start — Start production server
-- npm run lint — Run ESLint
-
-TypeScript config (tsconfig.json): Target ES2017, strict mode, bundler module resolution, path alias @/* to root, Next.js plugin included, incremental builds enabled. No emitted JS — Next.js handles compilation.
-
-PostCSS (postcss.config.mjs): Single plugin @tailwindcss/postcss for Tailwind v4 processing.
-
-ESLint (eslint.config.mjs): Flat config format, extends Next.js vitals + TS rules, ignores .next/, out/, build/, next-env.d.ts.
-
-No containerization or CI: There are no Dockerfiles, docker-compose files, GitHub Actions, CircleCI, GitLab CI, Jenkinsfile, Makefile, or shell build/deploy scripts anywhere in the repository. Deployment is intended to be a direct next build + next start on a host platform (likely Vercel given the vercel.svg asset).
-
-Artifacts: Build output goes to .next/ (standard Next.js), which is gitignored. Static assets live under public/ and are served as-is.
+TypeScript is configured via tsconfig.json with strict mode, bundler module resolution, path aliases (@/* -> root), and the Next.js compiler plugin. PostCSS + Tailwind v4 are wired through postcss.config.mjs. There is no Dockerfile, Makefile, CI/CD configuration, or deployment script present in this repository - the .next/ directory indicates builds are produced locally or by an external platform (most likely Vercel, given the Next.js default). Image optimization is handled by Sharp (sharp-cli dependency).

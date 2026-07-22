@@ -1,1 +1,1 @@
-Next.js 16 (App Router) + React 19 + TypeScript, Tailwind CSS v4 via @tailwindcss/postcss, Supabase JS client v2 for DB/storage, nodemailer v8 for email, sharp-cli for image processing, Google AdSense injected in `RootLayout`.
+Next.js 16 App Router with React 19, Tailwind CSS v4 via PostCSS, Supabase JS client v2 for RLS-backed DB and Storage, Nodemailer v8 with Gmail SMTP for transactional email, Cloudinary SDK v2 for image upload scripts, Sharp CLI for asset processing.

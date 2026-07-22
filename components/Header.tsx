@@ -1,12 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ImageWithSkeleton from './ImageWithSkeleton';
+
+const NAV_SECTIONS = ['home', 'about', 'services', 'updates', 'projects', 'clients', 'team', 'competitions', 'contact'];
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTrainingDropdownOpen, setIsTrainingDropdownOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const headerHeight = 80; // Approximate header height
+      const scrollPosition = window.scrollY + headerHeight;
+      
+      let currentSection = 'home';
+      
+      for (const id of NAV_SECTIONS) {
+        const element = document.getElementById(id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const elementTop = rect.top + window.scrollY;
+          const elementBottom = elementTop + rect.height;
+          
+          // Check if this section is currently in view
+          if (elementTop <= scrollPosition && elementBottom > scrollPosition) {
+            currentSection = id;
+            break;
+          }
+        }
+      }
+      
+      setActiveSection(currentSection);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -39,10 +72,16 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:block">
           <ul className="flex space-x-6 text-sm font-medium">
-            <li><a href="#home" className="text-blue-900 hover:text-red-600 transition-colors">Home</a></li>
-            <li><a href="#about" className="text-blue-900 hover:text-red-600 transition-colors">About</a></li>
-            <li><a href="#services" className="text-blue-900 hover:text-red-600 transition-colors">Services</a></li>
-            <li><a href="#projects" className="text-blue-900 hover:text-red-600 transition-colors">Projects</a></li>
+            <li><a href="#home" className={`transition-colors ${activeSection === 'home' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>Home</a></li>
+            <li><a href="#about" className={`transition-colors ${activeSection === 'about' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>About</a></li>
+            <li><a href="#services" className={`transition-colors ${activeSection === 'services' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>Services</a></li>
+            <li><a href="#updates" className={`transition-colors flex items-center gap-1 ${activeSection === 'updates' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Updates
+            </a></li>
+            <li><a href="#projects" className={`transition-colors ${activeSection === 'projects' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>Projects</a></li>
             
             {/* Training Dropdown */}
             <li 
@@ -76,8 +115,8 @@ export default function Header() {
               </div>
             </li>
             
-            <li><a href="#competitions" className="text-red-600 hover:text-blue-900 transition-colors animate-pulse">Competitions</a></li>
-            <li className="ml-auto"><a href="#contact" className="text-blue-900 hover:text-red-600 transition-colors">Contact</a></li>
+            <li><a href="#competitions" className={`transition-colors ${activeSection === 'competitions' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>Competitions</a></li>
+            <li className="ml-auto"><a href="#contact" className={`transition-colors ${activeSection === 'contact' ? 'text-red-600' : 'text-blue-900 hover:text-red-600'}`}>Contact</a></li>
             <li>
               <a 
                 href="https://web.facebook.com/profile.php?id=100092432334656" 
@@ -140,8 +179,14 @@ export default function Header() {
         <div className="p-5 flex flex-col space-y-4">
           <a href="#home" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Home</a>
           <a href="#about" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">About</a>
-          <a href="#services" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Services</a>
-          <a href="#projects" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Projects</a>
+          <a href="#services" onClick={closeMenu} className={`text-lg font-medium border-b border-gray-50 pb-2 ${activeSection === 'services' ? 'text-red-600' : 'text-gray-800 hover:text-blue-600'}`}>Services</a>
+          <a href="#updates" onClick={closeMenu} className={`text-lg font-medium border-b border-gray-50 pb-2 flex items-center gap-2 ${activeSection === 'updates' ? 'text-red-600' : 'text-gray-800 hover:text-blue-600'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            Updates
+          </a>
+          <a href="#projects" onClick={closeMenu} className={`text-lg font-medium border-b border-gray-50 pb-2 ${activeSection === 'projects' ? 'text-red-600' : 'text-gray-800 hover:text-blue-600'}`}>Projects</a>
           
           {/* Training Section in Mobile */}
           <div className="border-b border-gray-50 pb-2">
@@ -156,7 +201,7 @@ export default function Header() {
             </a>
           </div>
           
-          <a href="#competitions" onClick={closeMenu} className="text-lg font-medium text-red-600 hover:text-blue-900 border-b border-gray-50 pb-2">Competitions</a>
+          <a href="#competitions" onClick={closeMenu} className={`text-lg font-medium border-b border-gray-50 pb-2 ${activeSection === 'competitions' ? 'text-red-600' : 'text-gray-800 hover:text-blue-600'}`}>Competitions</a>
           <hr className="my-2 border-gray-200" />
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Connect</p>
           <a href="#contact" onClick={closeMenu} className="text-lg font-medium text-gray-800 hover:text-blue-600 border-b border-gray-50 pb-2">Contact</a>

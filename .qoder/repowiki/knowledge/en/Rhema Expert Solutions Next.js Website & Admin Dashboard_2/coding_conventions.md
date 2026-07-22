@@ -1,0 +1,6 @@
+- Server actions are marked `'use server'` at the top of each file and guard every mutation with `await checkAuth()`, returning `{ success: false, error: 'Unauthorized' }` when unauthenticated.
+- After any successful write (insert/update/delete) in a server action, `revalidatePath('/admin/dashboard')` is called so the dashboard reflects changes without a full reload.
+- Supabase queries use the service-role client (`supabaseAdmin`) for admin operations and the anon client (`supabase`) for public reads, keeping RLS boundaries explicit per file.
+- Client-side data fetching in the dashboard uses `useEffect` keyed on tab/filter parameters (e.g., `[activeTab, notesPage, notesSearch, ...]`) to trigger refetches only when relevant state changes.
+- Form handling follows a generic pattern: a single `handleInputChange` that spreads `e.target.name` into a shared `formData` object, with separate handlers per feature area dispatching to the appropriate server action.
+- User feedback is routed through a centralized `showNotification({ type, message })` helper that renders a toast and auto-dismisses after 5 seconds, rather than inline alerts.

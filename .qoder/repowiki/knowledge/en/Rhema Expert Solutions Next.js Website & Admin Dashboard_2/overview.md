@@ -1,0 +1,1 @@
+Next.js App Router website for Rhema Expert Solutions featuring public landing pages, a Supabase-backed admin dashboard with e-note management, and server actions for content CRUD.

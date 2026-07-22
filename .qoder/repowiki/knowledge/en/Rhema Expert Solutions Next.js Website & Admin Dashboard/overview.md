@@ -1,1 +1,1 @@
-Next.js 16 marketing site for Rhema Expert Solutions with a Supabase-backed admin dashboard managing services, registrations, staff notes, and professional trainings.
+Next.js 16 website with Tailwind CSS hosting marketing pages, coding-class and professional-training registration forms, and a password-protected admin dashboard for content, registrations, and staff e-notes.

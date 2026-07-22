@@ -1,0 +1,1 @@
+Next.js 14+ App Router with TypeScript, Tailwind CSS styling, Supabase JS client (`@supabase/supabase-js`) for Postgres + Storage, Google AdSense integration injected in `app/layout.tsx`, and server-side revalidation via `next/cache.revalidatePath`.
